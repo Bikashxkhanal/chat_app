@@ -1,0 +1,16 @@
+{
+  "name": "@repo/utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC", 
+  "exports" : {
+    "." : {
+      "default" : "./src/index.ts", 
+      "import" : "./src/index.ts", 
+      "require" : "./src/index.ts"
+    }
+  }
+}
