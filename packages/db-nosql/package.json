@@ -1,0 +1,16 @@
+{
+  "name": "@repo/db-nosql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC", 
+  "exports" : {
+    "." : {
+      "import" : "./src/index.ts", 
+      "default" : "./src/index.ts",
+      "require" : "./src/index.ts"
+    }
+  }
+}
