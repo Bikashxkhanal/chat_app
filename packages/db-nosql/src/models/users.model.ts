@@ -1,25 +1,8 @@
-import {Schema, model, HydratedDocument, Types , Model } from "mongoose";
+import {Schema, model} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from 'jsonwebtoken'
-import {USER_ROLE, IUser} from '@repo/types'
+import { IUserMethods, UserModel, IUserDocument,USER_ROLE } from "@repo/types";
 
-
-interface IUserDocument extends Omit<IUser, "id" | "tenant_id" > {
-    _id : Types.ObjectId,
-    tenant_id? : Types.ObjectId | null
-}
-
-interface IUserMethods {
-    isPasswordCorrect(password: string): Promise<boolean>;
-
-    generateAccessToken(): string;
-
-    generateRefreshToken(): string;
-}
-
-type UserDocument = HydratedDocument<IUserDocument, IUserMethods>
-
-type UserModel = Model<IUserDocument, {}, IUserMethods>
 
 const userSchema = new Schema<IUserDocument, UserModel, IUserMethods>({
    
@@ -48,7 +31,7 @@ const userSchema = new Schema<IUserDocument, UserModel, IUserMethods>({
     }, 
     tenant_id : {
         type : Schema.Types.ObjectId,
-        ref : "User",
+        ref : "Tenant",
         default : null
     }, 
     email : {
@@ -57,10 +40,12 @@ const userSchema = new Schema<IUserDocument, UserModel, IUserMethods>({
         default : null,
         validate : {
             validator : function (n:String) {
+            if(!n) return true;
             return  n?.includes('@') ? true : false
         },
         message : `Invalid email type`
     }
+
     }, 
     avatar : {
         type : String,
@@ -94,7 +79,7 @@ userSchema.pre('save',async function () {
 });
 
 // compare passwords
-userSchema.methods.isPasswordCorrect = async function(password : string){
+userSchema.methods.isPasswordCorrect = async function(password : string) : Promise<boolean> {
     return await bcrypt.compare(password, this.hashed_password)
 }
 
@@ -103,8 +88,8 @@ userSchema.methods.generateAccessToken =  function(){
         //payload
         {
             id : this._id,
-            phone_number : this.phone_number,
-            type : this.type
+            phone_number : this.phone_number.toString(),
+            tenant_id : this.tenant_id
         },
         //access token key 
         process.env.ACCESS_TOKEN_SECRET! as string ,
@@ -116,7 +101,7 @@ userSchema.methods.generateAccessToken =  function(){
     )
 }
 
-userSchema.methods.generateRefreshToken =   function() {
+userSchema.methods.generateRefreshToken =  function() {
     return  jwt.sign(
     {
         id : this._id

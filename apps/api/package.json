@@ -1,24 +1,32 @@
 {
-  "name": "@chat_app/api",
+  "name": "@repo/api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev"  : "tsx watch src/server.ts", 
-    "build" : "tsc",
-    "start" : "node src/server.ts"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.6",
+    "@repo/db-nosql": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@types/jsonwebtoken": "^9.0.10",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.0",
+    "cors": "^2.8.6",
     "nodemon": "^3.1.14",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"

@@ -3,7 +3,7 @@ import {AUTH_ROLE} from './roles.type'
 
 export interface localLoginBody {
     type : AUTH_ROLE.NORMAL;
-    phone_number : bigint
+    phone_number : string
     password : string
 }
 
@@ -16,12 +16,12 @@ export interface sdkLoginBody {
 
 export interface preLocalRegisterBody {
     type : AUTH_ROLE.NORMAL;
-    phone_number : bigint;
+    phone_number : string;
 }
 
 export interface localRegisterBody {
     type : AUTH_ROLE.NORMAL;
-    phone_number : bigint;
+    phone_number : string;
     password : string;
     confirm_password : string;
 }

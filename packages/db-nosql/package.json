@@ -2,15 +2,25 @@
   "name": "@repo/db-nosql",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "keywords": [],
   "author": "",
-  "license": "ISC", 
-  "exports" : {
-    "." : {
-      "import" : "./src/index.ts", 
-      "default" : "./src/index.ts",
-      "require" : "./src/index.ts"
+  "license": "ISC",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts",
+      "require": "./src/index.ts"
     }
+  },
+  "dependencies": {
+    "@repo/types": "workspace:*",
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }

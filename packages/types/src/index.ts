@@ -1,4 +1,5 @@
 export * from './user.type'
 export * from './roles.type'
 export * from './auth.type'
-export * from './partner.tokeninfo'
+export * from './partner.tokeninfo.type'
+export * from './tenant.type'

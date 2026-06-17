@@ -1,4 +1,4 @@
 
 
-export const ssoOrigins : string[] = ["abc.com", "edf.com"];
+export const ssoOrigins : string[] = ["http://api.kds.com/", "edf.com"];
 

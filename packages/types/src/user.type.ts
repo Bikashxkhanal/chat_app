@@ -5,7 +5,7 @@ import { Types , HydratedDocument, Model} from "mongoose";
 export interface IUser{
     id? : string;
     full_name? : string | null; 
-    phone_number : BigInt;
+    phone_number : string;
     type : USER_ROLE_TYPE; //defines type of user : normal or tenant
     avatar? : string | null;
     tenant_id? : string | null
