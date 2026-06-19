@@ -26,7 +26,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
   const [countryCode, setCountryCode] = useState("+977");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Full E.164-style number sent to backend
   const fullNumber = `${countryCode}${phone.replace(/\D/g, "")}`;
@@ -51,7 +51,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
-      setLoading(false);
+      setLoading(true);
     }
   }
 

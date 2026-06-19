@@ -1,67 +1,85 @@
-// import  {type JSX } from 'react'
-// import './App.css'
-// import {formatDate} from '@repo/utils'
-
-// function App() : JSX.Element {
-//   return (<>
-//     <p>Bikash khanal</p>
-//     <p>{formatDate(new Date())}</p>
-//     </>
-//   )
-// }
-
-// export default App
-
-import { type JSX, useState } from "react";
+import { type JSX } from "react";
+import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./App.css";
 import Login from "./components/auth/login";
 import PreSignup from "./components/auth/presignup";
 import Signup from "./components/auth/signup";
 import type { PreSignupState } from "./types/auth.types";
 
-type AuthScreen = "login" | "presignup" | "signup";
+function LoginRoute(): JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <Login
+      onSuccess={() => {
+        // TODO: navigate into the actual app / chat dashboard
+        console.log("Logged in!");
+      }}
+      onSignupClick={() => navigate("/signup")}
+    />
+  );
+}
 
-function App(): JSX.Element {
-  const [screen, setScreen] = useState<AuthScreen>("login");
-  const [preSignupState, setPreSignupState] = useState<PreSignupState | null>(null);
+function PreSignupRoute(): JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <PreSignup
+      onVerified={(state: PreSignupState) => {
+        navigate("/signup/create-password", { state });
+      }}
+      onLoginClick={() => navigate("/login")}
+    />
+  );
+}
 
-  if (screen === "login") {
-    return (
-      <Login
-        onSuccess={() => {
-          // TODO: navigate into the actual app / chat dashboard
-          console.log("Logged in!");
-        }}
-        onSignupClick={() => setScreen("presignup")}
-      />
-    );
-  }
+function SignupRoute(): JSX.Element {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Use React Router's native state tracking instead of window.history
+  const state = location.state as PreSignupState | null;
 
-  if (screen === "presignup") {
-    return (
-      <PreSignup
-        onVerified={(state) => {
-          setPreSignupState(state);
-          setScreen("signup");
-        }}
-        onLoginClick={() => setScreen("login")}
-      />
-    );
-  }
-
-  // screen === "signup"
-  if (!preSignupState) {
-    // Guard: shouldn't happen, but fall back to step 1 if state was lost (e.g. page refresh)
-    setScreen("presignup");
-    return <></>;
+  if (!state) {
+    return <Navigate to="/signup" replace />;
   }
 
   return (
     <Signup
-      preSignupState={preSignupState}
-      onSuccess={() => setScreen("login")}
+      preSignupState={state}
+      onSuccess={() => navigate("/login")}
     />
   );
+}
+
+// 1. Create the router configuration with children
+const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <LoginRoute />,
+  },
+  {
+    path: "/signup",
+    // We wrap signup paths in a simple layout block so they can branch out naturally
+    element: <Outlet />, 
+    children: [
+      {
+        index: true, // Handles exactly "/signup"
+        element: <PreSignupRoute />,
+      },
+      {
+        path: "create-password", // Handles "/signup/create-password"
+        element: <SignupRoute />,
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <Navigate to="/login" replace />,
+  },
+]);
+
+// 2. Render using RouterProvider
+function App(): JSX.Element {
+  return <RouterProvider router={router} />;
 }
 
 export default App;
