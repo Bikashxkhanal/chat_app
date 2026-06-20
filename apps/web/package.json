@@ -12,14 +12,17 @@
   "dependencies": {
     "@repo/utils": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
+    "@repo/types" : "workspace:*",
+    "axios": "^1.18.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-router-dom": "^7.18.0",
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.3.0",

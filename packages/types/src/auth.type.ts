@@ -2,25 +2,25 @@ import {AUTH_ROLE} from './roles.type'
 
 
 export interface localLoginBody {
-    type : AUTH_ROLE.NORMAL;
+    type :typeof AUTH_ROLE.NORMAL;
     phone_number : string
     password : string
 }
 
 export interface sdkLoginBody {
-    type : AUTH_ROLE.SDK
+    type :typeof AUTH_ROLE.SDK
     api_key : string;
     access_token : string;
    
 }
 
 export interface preLocalRegisterBody {
-    type : AUTH_ROLE.NORMAL;
+    type :typeof AUTH_ROLE.NORMAL;
     phone_number : string;
 }
 
 export interface localRegisterBody {
-    type : AUTH_ROLE.NORMAL;
+    type :typeof AUTH_ROLE.NORMAL;
     phone_number : string;
     password : string;
     confirm_password : string;
@@ -28,11 +28,8 @@ export interface localRegisterBody {
 
 // will update when needed 
 export interface sdkRegisterBody {
-    type : AUTH_ROLE.SDK
+    type :typeof AUTH_ROLE.SDK
 }
-
-
-
 
 
 export type loginBody = localLoginBody | sdkLoginBody

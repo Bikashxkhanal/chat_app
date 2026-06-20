@@ -3,11 +3,14 @@ import path from 'node:path'
 
 
 dotenv.config({
-    path : path.resolve(__dirname, "../../../.env")
+    path : path.resolve(__dirname, "./../../../.env")
 })
+console.log(__dirname);
+
 
 import {connectMongoDB} from "@repo/db-nosql";
-import { app } from "./app";
+import { httpServer } from "./app";
+
 
 
 
@@ -22,7 +25,7 @@ import { app } from "./app";
     }
 })()
 
-app.listen( process.env.API_PORT, () => {
+httpServer.listen( process.env.API_PORT, () => {
     console.log(`Server is running on ${process.env.API_PORT}`);
 })
 

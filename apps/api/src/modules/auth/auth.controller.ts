@@ -1,4 +1,5 @@
-import { asyncHandler, ApiResponse, ApiError } from "../../utils";
+import { ApiError, ApiResponse } from "@repo/utils";
+import { asyncHandler } from "../../utils";
 import { loginBody , AUTH_ROLE, registerBody, preLocalRegisterBody, partnerUserInfoInTokenType} from "@repo/types";
 import { userModel } from "@repo/db-nosql";
 import { cookieOptions } from "../../constants/index";
@@ -21,7 +22,7 @@ export const login = asyncHandler(async (req, res, next) => {
 
         if(!body.phone_number || !body.password?.trim()){
             // throw an api error
-            throw new ApiError(400, "Both phone number and password is required", ['missing phone number or password']);
+            throw new ApiError(401, "Both phone number and password is required", ['missing phone number or password']);
         }     
 
             const user = await userModel.findOne({
@@ -30,12 +31,12 @@ export const login = asyncHandler(async (req, res, next) => {
 
             // if user doesnot exists
             if(!user){
-                throw new ApiError(400, "User with such phone number doesnot exists");
+                throw new ApiError(401, "User with such phone number doesnot exists");
             }
             
             // normal user cannot contain tenant id
             if(user?.tenant_id){
-                throw new ApiError(400, "User type didnot matched");
+                throw new ApiError(401, "User type didnot matched");
             }
 
             // comparing password
@@ -43,7 +44,7 @@ export const login = asyncHandler(async (req, res, next) => {
     
             // if incorrect , exit
           if(!isPasswordCorrect){
-            throw new ApiError(400, "Incorrect password");
+            throw new ApiError(401, "Incorrect password");
           }
 
         //   if the password is correct, then generate , refresh and acess tokens 
@@ -82,7 +83,7 @@ export const login = asyncHandler(async (req, res, next) => {
       })
       console.log(user);
       
-      if(!user) throw new ApiError(400, "invalid request, user doesnot exist");
+      if(!user) throw new ApiError(401, "invalid request, user doesnot exist");
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
@@ -121,19 +122,21 @@ export const preRegister = asyncHandler(async(req, res, next) => {
     const body : preLocalRegisterBody = req?.body;
 
     if(body.type !== AUTH_ROLE.NORMAL){
-        throw new ApiError(400, "Invalid registration type");
+        throw new ApiError(401, "Invalid registration type");
     }
 
     if(!body.phone_number){
-        throw new ApiError(400, "phone number is required");
+        throw new ApiError(401, "phone number is required");
     }
 
     try {
         const isUser = await userModel.findOne({phone_number : body.phone_number});
-
-        if(isUser && !isUser.tenant_id){
-            throw new ApiError(400, "user already exists");
+        // console.log(isUser);
+        
+        if(isUser && isUser.tenant_id === null){
+            throw new ApiError(401, "user already exists");
         }
+        console.log("After throwing erro");
         
 
         return res.status(200)
@@ -141,8 +144,8 @@ export const preRegister = asyncHandler(async(req, res, next) => {
                         isUser : false,
                         otpVerified : false
                     }, "pre-registration successfull..."));
-                } catch (error) {
-                    throw new ApiError(500, "Internal server error");
+                } catch (error : any) {
+                    throw new ApiError(401, error.message);
                 }
 })
 
@@ -154,13 +157,13 @@ export const register = asyncHandler(async(req, res, next) => {
 
 
     if(body.type !== AUTH_ROLE.NORMAL && body.type !== AUTH_ROLE.SDK){
-        throw new ApiError(400, "Invalid registration request", [`Invalid registration request type`])
+        throw new ApiError(401, "Invalid registration request", [`Invalid registration request type`])
     }
 
     if(body.type === AUTH_ROLE.NORMAL){
         // stpes for registrating normal user
 
-    if(body.password !== body.confirm_password) throw new ApiError(400, "confirm password didnot matched");
+    if(body.password !== body.confirm_password) throw new ApiError(401, "confirm password didnot matched");
 
 
     try {

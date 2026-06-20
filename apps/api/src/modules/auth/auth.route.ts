@@ -6,6 +6,7 @@ import { ssoVerifyJWT } from "../../middleware/ssoAuth.middleware";
 const authRouter = Router();
 
 authRouter.route("/login").post(login);
+authRouter.route("/preregister").post(preRegister);
 authRouter.route("/register").post(register);
 authRouter.route("/sso/login").post(verifyAPIKEY, ssoVerifyJWT , login);
 
