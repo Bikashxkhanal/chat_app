@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { Input } from "../common/input";
 import Button from "../common/button";
-import { preRegister } from "../../services/auth.service";
 import type { PreSignupState } from "../../types/auth.types";
 
 // Country codes list — extend as needed
@@ -26,7 +25,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
   const [countryCode, setCountryCode] = useState("+977");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Full E.164-style number sent to backend
   const fullNumber = `${countryCode}${phone.replace(/\D/g, "")}`;
@@ -34,25 +33,22 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
   async function handleSend() {
     setError("");
 
+    const digitsOnly = phone.replace(/\D/g, "");
+
     if (!phone.trim()) {
       setError("Phone number is required.");
       return;
     }
-    if (phone.replace(/\D/g, "").length < 6) {
-      setError("Please enter a valid phone number.");
+    if (digitsOnly.length !== 10) {
+      setError("Please enter a valid 10-digit phone number.");
       return;
     }
 
-    try {
-      setLoading(true);
-      await preRegister(fullNumber);
-      // Backend confirmed phone is free — move to Step 2
-      onVerified({ phone_number: fullNumber });
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setLoading(true);
-    }
+    // No verification call — go straight to Signup (Step 2) once
+    // a valid 10-digit number is entered.
+    setLoading(true);
+    onVerified({ phone_number: fullNumber });
+    setLoading(false);
   }
 
   return (
@@ -122,8 +118,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
               </svg>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
-              We'll send a 6-digit verification code to your phone via SMS to
-              secure your account. Standard rates may apply.
+              Enter your 10-digit phone number to create your account.
             </p>
           </div>
 
@@ -187,7 +182,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
             className="w-full flex items-center justify-center gap-2 font-semibold mt-4"
             style={{ background: "#3730d4" }}
           >
-            Send Verification Code
+            Continue
             {!loading && (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path

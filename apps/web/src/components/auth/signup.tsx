@@ -165,7 +165,7 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
               />
             </svg>
             <span className="text-sm" style={{ color: "#0d9488" }}>
-              Phone number {maskPhone(phone_number)} verified
+              Phone number {maskPhone(phone_number)}
             </span>
           </div>
 
