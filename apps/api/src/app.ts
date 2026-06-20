@@ -1,4 +1,4 @@
-import express from "express"
+import express, { ErrorRequestHandler, NextFunction, Request, Response } from "express"
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { Server} from "socket.io";
@@ -62,9 +62,25 @@ app.use(
     })
 )
 
+
+
 import { authRouter } from "./modules/auth/auth.route";
+import { ApiError } from "@repo/utils";
 
 app.use("/api/v1/auth", authRouter);
+
+
+app.use((err : ErrorRequestHandler, req : Request, res :Response , next : NextFunction) => {
+    if(err instanceof ApiError){
+            const statusCode = err.statusCode || 500;
+            res.status(statusCode).json({
+            success: false,
+            message: err.message || "Internal Server Error",
+  });
+
+    }
+ 
+});
 
 
 export {httpServer}

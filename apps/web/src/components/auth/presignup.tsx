@@ -7,6 +7,7 @@ import Button from "../common/button";
 import { preRegister } from "../../services/auth.service";
 import type { PreSignupState } from "../../types/auth.types";
 import { AUTH_ROLE } from "@repo/types";
+import { ApiError } from "@repo/utils";
 
 // Country codes list — extend as needed
 const COUNTRY_CODES = [
@@ -27,7 +28,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
   const [countryCode, setCountryCode] = useState("+977");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Full E.164-style number sent to backend
   const fullNumber = `${countryCode}${phone.replace(/\D/g, "")}`;
@@ -52,10 +53,10 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
       });
       // Backend confirmed phone is free — move to Step 2
       onVerified({ phone_number: fullNumber });
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } catch (error: any) {
+      setError((error instanceof Error) ? error.message : "something went wrong")
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   }
 

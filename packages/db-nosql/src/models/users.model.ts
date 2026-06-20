@@ -17,9 +17,9 @@ const userSchema = new Schema<IUserDocument, UserModel, IUserMethods>({
         required : [true, 'phone number is required'],
         validate : {
             validator : function(v : string){
-                return v.length == 10
+                return v.length >= 8
             }, 
-            message : "Must be of 10 length"
+            message : "Invalid phone number length"
         },
         index : true,
     }, 

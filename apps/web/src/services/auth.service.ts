@@ -5,8 +5,7 @@
 import type {localLoginBody, localRegisterBody, preLocalRegisterBody} from '@repo/types'
 import api from "./axios";
 import type { ApiResponse, User } from '../types/auth.types';
-import { ApiError } from '@repo/utils';
-import { AxiosError } from 'axios';
+import axios from 'axios';
 
 const postFn = async<TBody, TData> (endpoint : string, body : TBody) : Promise<ApiResponse<TData>> => {
 
@@ -14,11 +13,11 @@ const postFn = async<TBody, TData> (endpoint : string, body : TBody) : Promise<A
       const response = await api.post(endpoint, body );  
       return response.data;
     } catch (error : unknown) {
-      if(error instanceof ApiError){
-        throw error.message;
-      }else if (error instanceof AxiosError){
-        throw error.message;
-      }
+     if(axios.isAxiosError(error)){
+      throw new Error(
+        error.response?.data.message ?? "something went wrong"
+      )
+     }
       throw new Error("Request failed, please try again");
     }
     
@@ -30,9 +29,9 @@ export const login = async (loginData : localLoginBody) : Promise<ApiResponse<Us
 } 
 
 export const preRegister = async (preSignupData:preLocalRegisterBody) : Promise<ApiResponse<{isUser : boolean, otpVerified :  boolean}>> => {
-  return postFn("/presignup", preSignupData);
+   return postFn("/preregister", preSignupData);
 }
 
 export const register = async (postSignupData:localRegisterBody) : Promise<ApiResponse<User>> =>{
-  return postFn('/postsignup', postSignupData);
+  return postFn('/register', postSignupData);
 }

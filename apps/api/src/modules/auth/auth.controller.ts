@@ -131,10 +131,12 @@ export const preRegister = asyncHandler(async(req, res, next) => {
 
     try {
         const isUser = await userModel.findOne({phone_number : body.phone_number});
-
-        if(isUser && !isUser.tenant_id){
+        // console.log(isUser);
+        
+        if(isUser && isUser.tenant_id === null){
             throw new ApiError(401, "user already exists");
         }
+        console.log("After throwing erro");
         
 
         return res.status(200)
@@ -142,8 +144,8 @@ export const preRegister = asyncHandler(async(req, res, next) => {
                         isUser : false,
                         otpVerified : false
                     }, "pre-registration successfull..."));
-                } catch (error) {
-                    throw new ApiError(500, "Internal server error");
+                } catch (error : any) {
+                    throw new ApiError(401, error.message);
                 }
 })
 
