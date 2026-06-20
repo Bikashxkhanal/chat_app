@@ -6,6 +6,7 @@ import { Input } from "../common/input";
 import Button from "../common/button";
 import { preRegister } from "../../services/auth.service";
 import type { PreSignupState } from "../../types/auth.types";
+import { AUTH_ROLE } from "@repo/types";
 
 // Country codes list — extend as needed
 const COUNTRY_CODES = [
@@ -45,7 +46,10 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
 
     try {
       setLoading(true);
-      await preRegister(fullNumber);
+      await preRegister({
+        type : AUTH_ROLE.NORMAL, 
+        phone_number : fullNumber
+      });
       // Backend confirmed phone is free — move to Step 2
       onVerified({ phone_number: fullNumber });
     } catch (err: unknown) {

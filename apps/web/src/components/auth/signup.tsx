@@ -6,6 +6,7 @@ import { Input } from "../common/input";
 import Button from "../common/button";
 import { register } from "../../services/auth.service";
 import type { PreSignupState } from "../../types/auth.types";
+import { AUTH_ROLE } from "@repo/types";
 
 interface PasswordRules {
   minLength: boolean;
@@ -44,7 +45,7 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
     const digits = num.replace(/\D/g, "");
     const last4  = digits.slice(-4);
     const prefix = num.replace(/\d{4}$/, "");
-    return `${prefix}••••${last4}`;
+    return `${prefix}****${last4}`;
   }
 
   async function handleComplete() {
@@ -61,7 +62,13 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
 
     try {
       setLoading(true);
-      await register(phone_number, password, confirmPw);
+      await register({
+        type : AUTH_ROLE.NORMAL, 
+        password : password,
+        confirm_password : confirmPw,
+        phone_number : phone_number
+
+      });
       onSuccess();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed.");
@@ -70,7 +77,7 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
     }
   }
 
-  // ── Rule chip ────────────────────────────────────────────────────────────────
+
   function RuleChip({ met, label }: { met: boolean; label: string }) {
     return (
       <div className="flex items-center gap-1.5">

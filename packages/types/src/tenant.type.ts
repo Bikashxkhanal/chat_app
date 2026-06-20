@@ -1,4 +1,4 @@
-import { Types, HydratedDocument, Model } from "mongoose";
+import type { Types, HydratedDocument, Model } from "mongoose";
 export interface ITenant{
     id? : string;
     name : string;

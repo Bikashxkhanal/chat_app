@@ -1,77 +1,38 @@
-// ─── Auth Service ─────────────────────────────────────────────────────────────
-// All auth-related API calls. Reads base URL from env so you only set it once.
+// import { ApiError, ApiResponse } from "@repo/utils";
+// import { ApiResponse } from "@repo/utils";
 
-import type {
-  PreRegisterBody,
-  RegisterBody,
-  LoginBody,
-  ApiResponse,
-  User,
-} from "../types/auth.types";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-const AUTH_BASE = `${BASE_URL}/api/v1/auth`;
+import type {localLoginBody, localRegisterBody, preLocalRegisterBody} from '@repo/types'
+import api from "./axios";
+import type { ApiResponse, User } from '../types/auth.types';
+import { ApiError } from '@repo/utils';
+import { AxiosError } from 'axios';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const postFn = async<TBody, TData> (endpoint : string, body : TBody) : Promise<ApiResponse<TData>> => {
 
-async function post<TBody, TData>(
-  endpoint: string,
-  body: TBody
-): Promise<ApiResponse<TData>> {
-  const res = await fetch(`${AUTH_BASE}${endpoint}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include", // needed for httpOnly cookies
-    body: JSON.stringify(body),
-  });
-
-  const data: ApiResponse<TData> = await res.json();
-
-  // Treat 4xx / 5xx as thrown errors so callers can just catch
-  if (!res.ok) {
-    throw new Error(data.message ?? "Something went wrong");
-  }
-
-  return data;
+    try {
+      const response = await api.post(endpoint, body );  
+      return response.data;
+    } catch (error : unknown) {
+      if(error instanceof ApiError){
+        throw error.message;
+      }else if (error instanceof AxiosError){
+        throw error.message;
+      }
+      throw new Error("Request failed, please try again");
+    }
+    
 }
 
-// ─── Pre-Register (Step 1 of signup) ─────────────────────────────────────────
-// Checks that the phone number is not already registered.
-// Backend: POST /api/v1/auth/pre-register
+export const login = async (loginData : localLoginBody) : Promise<ApiResponse<User>> => {
+  // console.log("inside login");
+  return postFn("/login", loginData);
+} 
 
-export async function preRegister(
-  phone_number: string
-): Promise<ApiResponse<{ isUser: boolean; otpVerified: boolean }>> {
-  const body: PreRegisterBody = { type: "NORMAL", phone_number };
-  return post("/pre-register", body);
+export const preRegister = async (preSignupData:preLocalRegisterBody) : Promise<ApiResponse<{isUser : boolean, otpVerified :  boolean}>> => {
+  return postFn("/presignup", preSignupData);
 }
 
-// ─── Register (Step 2 of signup) ─────────────────────────────────────────────
-// Creates the account with phone + password.
-// Backend: POST /api/v1/auth/register
-
-export async function register(
-  phone_number: string,
-  password: string,
-  confirm_password: string
-): Promise<ApiResponse<User>> {
-  const body: RegisterBody = {
-    type: "NORMAL",
-    phone_number,
-    password,
-    confirm_password,
-  };
-  return post("/register", body);
-}
-
-// ─── Login ────────────────────────────────────────────────────────────────────
-// Authenticates and sets httpOnly cookies via the backend.
-// Backend: POST /api/v1/auth/login
-
-export async function login(
-  phone_number: string,
-  password: string
-): Promise<ApiResponse<{ user: User }>> {
-  const body: LoginBody = { type: "NORMAL", phone_number, password };
-  return post("/login", body);
+export const register = async (postSignupData:localRegisterBody) : Promise<ApiResponse<User>> =>{
+  return postFn('/postsignup', postSignupData);
 }

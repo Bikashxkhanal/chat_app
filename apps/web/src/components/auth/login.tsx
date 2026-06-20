@@ -1,9 +1,8 @@
-// ─── Login ─────────────────────────────────────────────────────────────────────
-
 import { useState } from "react";
 import { Input } from "../common/input";
 import Button from "../common/button";
 import { login } from "../../services/auth.service";
+import { AUTH_ROLE } from "@repo/types";
 
 const COUNTRY_CODES = [
   { code: "+977", flag: "🇳🇵", name: "NP" },
@@ -42,7 +41,11 @@ export default function Login({ onSuccess, onSignupClick }: LoginProps) {
 
     try {
       setLoading(true);
-      await login(fullNumber, password);
+      await login({
+        type : AUTH_ROLE.NORMAL,
+        phone_number : fullNumber,
+        password : password
+      })
       onSuccess();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid phone number or password.");
@@ -60,7 +63,7 @@ export default function Login({ onSuccess, onSignupClick }: LoginProps) {
       className="min-h-screen flex flex-col"
       style={{ background: "linear-gradient(135deg, #f1f2f9 0%, #e9ebf6 100%)" }}
     >
-      {/* ── Top nav ──────────────────────────────────────────────────────── */}
+     
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100">
         <span className="text-lg font-bold" style={{ color: "#3730d4" }}>
           ChatPulse

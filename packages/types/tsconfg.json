@@ -1,5 +1,6 @@
 {
     "compailerOptions" : {
-        "allowImportingTsExtensions"  : true
+        "allowImportingTsExtensions"  : true,
+        "erasableSyntaxOnly" : false
     }
 }
