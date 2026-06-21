@@ -1,5 +1,5 @@
 // setup the connection for socket io
-import { ApiError } from "../utils";
+import { ApiError } from "@repo/utils";
 import { handleEvents } from "./events/handleevent";
 import jwt from 'jsonwebtoken'
 import { userModel } from "@repo/db-nosql";
