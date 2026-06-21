@@ -81,7 +81,7 @@ export const login = asyncHandler(async (req, res, next) => {
         phone_number :  partnerUser.phone_number!,
         
       })
-      console.log(user);
+    //   console.log(user);
       
       if(!user) throw new ApiError(401, "invalid request, user doesnot exist");
 
@@ -91,8 +91,6 @@ export const login = asyncHandler(async (req, res, next) => {
     const finalUser = await userModel.findByIdAndUpdate(user._id, {refresh_token : refreshToken}, {new : true}).select("--hashed_password").lean();
     
     
-      
-      
         return res.status(200)
         .cookie("chatappAccessToken", accessToken, cookieOptions)
         .cookie("chatappRefreshToken", refreshToken, cookieOptions)

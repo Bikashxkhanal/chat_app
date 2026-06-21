@@ -2,6 +2,7 @@ import { useState } from "react";
  
 type MessageStatus = "received_unseen" | "received_seen" | "sent";
  
+
 interface UserCardProps {
   avatar: string;
   name: string;
