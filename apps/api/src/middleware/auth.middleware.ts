@@ -1,6 +1,7 @@
 import { userModel } from "@repo/db-nosql";
-import { ApiError, asyncHandler } from "../utils";
+import { asyncHandler } from "../utils";
 import jwt, {JwtPayload} from 'jsonwebtoken';
+import { ApiError } from "@repo/utils";
 
 
 // interface for jwt payload for type safety

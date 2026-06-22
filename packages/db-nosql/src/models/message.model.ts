@@ -2,6 +2,7 @@ import { Document, model, Schema } from "mongoose";
 
 interface TMessage extends Document{
     author : Schema.Types.ObjectId;
+    conversation_Id : Schema.Types.ObjectId,
     text : String;
     is_Media : Boolean;
     media_Id? : Schema.Types.ObjectId
@@ -13,6 +14,12 @@ const messageSchema = new Schema<TMessage>(
         author : {
             type : Schema.Types.ObjectId,
             ref : "User",
+            required : true
+        },
+
+        conversation_Id : {
+            type : Schema.Types.ObjectId,
+            ref : "Conversation",
             required : true
         },
 

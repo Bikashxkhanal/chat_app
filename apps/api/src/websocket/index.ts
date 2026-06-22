@@ -57,13 +57,9 @@ const getSocketIOConnection = (io : any) => {
             socket.emit(
                 chatEventEnums.SOCKET_ERROR_EVENT, "something went wrong while connectiong socket"
             )
-    }
-
-     
-           
+    }          
     })
 
-    
 }
 
 
