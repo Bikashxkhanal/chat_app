@@ -191,7 +191,7 @@ const getConversationMessages = asyncHandler(async(req, res) => {
     // get the user to whom have conversation, with pagination of the messages so that messages will be loaded based on the 
 
     const {conversationedUserId} =  req.params;
-    const query : PageAndLimit = req.query;
+    const query  = req.query as unknown as PageAndLimit;
 
     const currentLoggedInUser = req.user?._id;
 
@@ -235,16 +235,11 @@ const getConversationMessages = asyncHandler(async(req, res) => {
      return res.json(
         new ApiResponse(200, conversation, "Conversation of required user fetched successfully!")
      )
- 
+
  
    } catch (error : any) {
     throw new ApiError(500, error.message || "Server response error");
    }
-
-
-
-
-
 
 })
 
