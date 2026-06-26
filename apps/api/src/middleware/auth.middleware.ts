@@ -21,21 +21,25 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
 
         // if token is available then verify the access token with secret using jwt
         const decodedInfo = jwt.verify(token , process.env.ACCESS_TOKEN_SECRET!) as jwtPayload;
+        // console.log(decodedInfo);
+        
 
         // console.log(decodedInfo);
         
         if(!decodedInfo) throw new ApiError(401, "session expired"); //must invoke refresh endpoint to regenerate the access token 
 
         // get the user info by extracting the _id from decodedInfo
-        const user = await userModel.findById(decodedInfo?._id).select("-hashed_password -refreshToken");
+        const user = await userModel.findById(decodedInfo._id).select("-hashed_password -refreshToken");
+        // console.log(user);
+        
 
         if(!user) throw new ApiError(400, "cannot find user");
 
         req.user = user;
         next();
         
-    } catch (error) {
-        throw new ApiError(401, "User authenctication failed");
+    } catch (error: any) {
+        throw new ApiError(401, error.message);
     }
 });
 

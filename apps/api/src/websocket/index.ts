@@ -13,7 +13,7 @@ interface jwtpayload extends JwtPayload{
 }
 
 
-const getSocketIOConnection = (io : any) => {
+const initializeSocketInstance = (io : any) => {
    return io.on("connection", async (socket : any) => {
             console.log(`Socket connected ${socket.id}`);
 
@@ -68,6 +68,6 @@ const emitSocketEvents = (req : any, roomId : any,ioevent : any,  payload : any 
 }
 
 export {
-    getSocketIOConnection, 
+    initializeSocketInstance, 
     emitSocketEvents
 }

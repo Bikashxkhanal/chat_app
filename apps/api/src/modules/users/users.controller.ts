@@ -2,12 +2,12 @@ import { ApiError, ApiResponse } from "@repo/utils";
 import { asyncHandler } from "../../utils";
 import { conversationModel, userModel } from "@repo/db-nosql";
 import mongoose, { Aggregate, Mongoose } from "mongoose";
+import { IUserDocument, UserDocument } from "@repo/types";
 
 type PageAndLimit = {
     page : number ,
     limit : number
 }
-
 
 // get the users details avatar name, last message, last seen time associated with the current logged in user
 
@@ -190,18 +190,28 @@ return res.json(
 const getConversationMessages = asyncHandler(async(req, res) => {
     // get the user to whom have conversation, with pagination of the messages so that messages will be loaded based on the 
 
-    const {conversationedUserId} =  req.params;
+    const conversationedUserId  =  req.params.conversationedUserId as string
     const query  = req.query as unknown as PageAndLimit;
 
-    const currentLoggedInUser = req.user?._id;
+    const currentLoggedInUser = req.user!;
 
     if(!conversationedUserId) throw new ApiError(402, "User Id is required");
 
-    const offset = (query.page - 1) * query.limit;
+    try {
+
+     if(!mongoose.isObjectIdOrHexString(conversationedUserId)) throw new ApiError(401, "Invalid user Id type");
+    const docUserId = new mongoose.Types.ObjectId(conversationedUserId!);
+
+    const isUserExist = await userModel.findById(docUserId) as IUserDocument
+    if(!isUserExist) throw new ApiError(400, "Invalid user id");
+
+    if(isUserExist.tenant_id && (isUserExist.tenant_id !== currentLoggedInUser.tenant_id)) throw new ApiError(401, "Unauthorized request, cannot access other tenant user message")
+
+    const offset = (Number(query.page) - 1) * Number(query.limit);
 
     // pipelinging to get the conversation message between logged in user and asked user 
 
-   try {
+   
      const conversation = await conversationModel.aggregate([
              // get the conversation id by matching 
              {
@@ -228,7 +238,7 @@ const getConversationMessages = asyncHandler(async(req, res) => {
                 $skip : offset 
              }, 
              {
-                 $limit : query.limit
+                 $limit : Number(query.limit)
              }
      ])
 

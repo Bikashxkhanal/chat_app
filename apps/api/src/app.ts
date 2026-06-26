@@ -3,7 +3,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { Server} from "socket.io";
 import { createServer } from "node:http";
-
+import { initializeSocketInstance } from "./websocket";
 import dotenv from 'dotenv'
 import path from 'node:path'
 
@@ -45,6 +45,7 @@ io.on('connection', (socket) => {
     
 })
 
+initializeSocketInstance(io);
 
 
 // cookie parser setup
@@ -66,8 +67,10 @@ app.use(
 
 import { authRouter } from "./modules/auth/auth.route";
 import { ApiError } from "@repo/utils";
+import { userRouter } from "./modules/users/users.route";
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter)
 
 
 app.use((err : ErrorRequestHandler, req : Request, res :Response , next : NextFunction) => {

@@ -1,13 +1,15 @@
 // this middleware is for validating the api_key of the tenant , it validate the api key with different parameters like checking with actual api key (matching), validitity time or payment status, and request origin 
 
-import { asyncHandler, ApiError } from "../utils";
-import { ssoOrigins, partnerOriginToAcc , apiKeyMapWithOrigin} from "../constants";
+import { asyncHandler } from "../utils";
+import { ApiError } from "@repo/utils";
 import { AUTH_ROLE } from "@repo/types";
 import { tenantModel } from "@repo/db-nosql";
 
 
 export const verifyAPIKEY = asyncHandler(async(req , _ , next) => {
         //  get api_key from body
+        console.log("Inside api key middleware");
+        
 
         const {type, api_key}  = req.body;
 
