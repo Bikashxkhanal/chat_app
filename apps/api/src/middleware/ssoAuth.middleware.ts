@@ -9,8 +9,6 @@ export const ssoVerifyJWT = asyncHandler(async(req, _, next) => {
     // get the access token from the external application from the authorization header , if not available in authorization header take it from cookies (prefred:: Bearer , cookie name can be different for diffrent external application)
 
     // console.log("INsdie sso verify jwt");
-    
-
     try {
         const token = req?.header("Authorization")?.replace("Bearer ", "") || req?.cookies?.accessToken;
         if(!token) throw new ApiError(401, "Unauthorized access");

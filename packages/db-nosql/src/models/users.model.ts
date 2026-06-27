@@ -87,7 +87,7 @@ userSchema.methods.generateAccessToken =  function(){
     return jwt.sign(
         //payload
         {
-            id : this._id,
+            _id : this._id,
             phone_number : this.phone_number.toString(),
             tenant_id : this.tenant_id
         },
@@ -104,7 +104,7 @@ userSchema.methods.generateAccessToken =  function(){
 userSchema.methods.generateRefreshToken =  function() {
     return  jwt.sign(
     {
-        id : this._id
+        _id : this._id
     },
     process.env.REFRESH_TOKEN_SECRET!,
     {

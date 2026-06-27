@@ -6,6 +6,7 @@ import PreSignup from "./components/auth/presignup";
 import Signup from "./components/auth/signup";
 import type { PreSignupState } from "./types/auth.types";
 import Sidebar from "./components/dashboard/sidebar";
+import DashboardPage from "./page/dashboard";
 
 function LoginRoute(): JSX.Element {
   const navigate = useNavigate();
@@ -73,8 +74,8 @@ const router = createBrowserRouter([
     ],
   },
   { 
-    path : '/messages', 
-    element : <Sidebar />
+    path : '/dashboard', 
+    element : <DashboardPage />
 
   },
   {

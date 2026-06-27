@@ -7,7 +7,7 @@ import Button from "../common/button";
 import { preRegister } from "../../services/auth.service";
 import type { PreSignupState } from "../../types/auth.types";
 import { AUTH_ROLE } from "@repo/types";
-import { ApiError } from "@repo/utils";
+
 
 // Country codes list — extend as needed
 const COUNTRY_CODES = [
@@ -65,7 +65,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
       className="min-h-screen flex flex-col"
       style={{ background: "linear-gradient(135deg, #eef0f8 0%, #e8eaf6 100%)" }}
     >
-      {/* ── Body ─────────────────────────────────────────────────────────── */}
+
       <main className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-md px-8 py-10">
 
@@ -223,7 +223,7 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="py-4 flex flex-col items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium tracking-wide uppercase">
+        {/* <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium tracking-wide uppercase">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <rect
               x="3" y="11" width="18" height="11" rx="2" ry="2"
@@ -234,8 +234,8 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
               stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
             />
           </svg>
-          End-to-End Encrypted
-        </div>
+         
+        </div> */}
         <nav className="flex gap-5 text-xs text-gray-400">
           <a href="#" className="hover:underline">Privacy Policy</a>
           <a href="#" className="hover:underline">Terms of Service</a>

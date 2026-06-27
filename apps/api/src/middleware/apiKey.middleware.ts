@@ -8,7 +8,7 @@ import { tenantModel } from "@repo/db-nosql";
 
 export const verifyAPIKEY = asyncHandler(async(req , _ , next) => {
         //  get api_key from body
-        console.log("Inside api key middleware");
+        // console.log("Inside api key middleware");
         
 
         const {type, api_key}  = req.body;

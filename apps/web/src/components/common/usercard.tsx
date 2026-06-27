@@ -1,16 +1,6 @@
 import { useState } from "react";
+import  type { UserCardProps, MessageStatus } from "@repo/types";
  
-type MessageStatus = "received_unseen" | "received_seen" | "sent";
- 
-
-interface UserCardProps {
-  avatar: string;
-  name: string;
-  lastMessage: string;
-  messageStatus: MessageStatus;
-  timestamp?: string;
-  onClick?: () => void;
-}
  
 const statusStyles: Record<MessageStatus, { dot: string; text: string; bg: string }> = {
   received_unseen: {
@@ -30,8 +20,8 @@ const statusStyles: Record<MessageStatus, { dot: string; text: string; bg: strin
   },
 };
  
-function getInitials(name: string) {
-  return name
+function getInitials(full_name: string) {
+  return full_name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -41,7 +31,7 @@ function getInitials(name: string) {
  
 export function UserCard({
   avatar,
-  name,
+  full_name,
   lastMessage,
   messageStatus,
   timestamp,
@@ -105,11 +95,11 @@ export function UserCard({
           {avatar ? (
             <img
               src={avatar}
-              alt={name}
+              alt={full_name}
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            getInitials(name)
+            getInitials(full_name)
           )}
         </div>
         {/* Online indicator for unseen */}
@@ -143,16 +133,16 @@ export function UserCard({
           <span
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontWeight: isUnseen ? 700 : 500,
+              fontWeight: isUnseen ? 500 : 500,
               fontSize: "15px",
-              color: isUnseen ? "#f1f5f9" : "#cbd5e1",
+              color: isUnseen ? "#222222" : "#37774f",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
               letterSpacing: "-0.01em",
             }}
           >
-            {name}
+            {full_name}
           </span>
           {timestamp && (
             <span

@@ -1,5 +1,6 @@
-import { USER_ROLE_TYPE} from "./roles.type";
-import { Types , HydratedDocument, Model} from "mongoose";
+import type { USER_ROLE_TYPE} from "./roles.type";
+import  { Types , Model} from "mongoose";
+import type {HydratedDocument} from "mongoose"
 
 
 export interface IUser{

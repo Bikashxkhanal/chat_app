@@ -6,13 +6,13 @@ const Sidebar = () => {
     <nav
       className="
         fixed
-        bottom-0 left-0
-        w-full h-16
+        bottom-5 left-0
+        w-full h-16 z-10
         border-t bg-white
         flex flex-row items-center justify-start
         px-4
 
-        md:top-0 md:bottom-auto
+        md:top-0 md:bottom-auto md:relative
         md:w-20 md:h-screen
         md:border-r md:border-t-0
         md:flex-col md:justify-start md:py-4
@@ -34,7 +34,9 @@ const Sidebar = () => {
         }
       >
         <MessageCircle size={24} />
+        
       </NavLink>
+     
     </nav>
   );
 };

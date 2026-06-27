@@ -49,7 +49,7 @@ export default function Login({ onSuccess, onSignupClick }: LoginProps) {
         password : password
       })
       onSuccess();
-      navigate('/messages')
+      navigate('/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid phone number or password.");
     } finally {

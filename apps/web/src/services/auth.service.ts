@@ -14,8 +14,9 @@ const postFn = async<TBody, TData> (endpoint : string, body : TBody) : Promise<A
       return response.data;
     } catch (error : unknown) {
      if(axios.isAxiosError(error)){
+      console.log(error);
       throw new Error(
-        error.response?.data.message ?? "something went wrong"
+        error.response?.data.message || "something went wrong"
       )
      }
       throw new Error("Request failed, please try again");

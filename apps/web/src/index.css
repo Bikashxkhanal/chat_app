@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@theme { 
+    --font-roboto: "Roboto Condensed", sans-serif;
+    --font-oswald : "Oswald", sans-sarif;
+}

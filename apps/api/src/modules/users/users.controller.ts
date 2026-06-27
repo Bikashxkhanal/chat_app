@@ -200,6 +200,7 @@ const getConversationMessages = asyncHandler(async(req, res) => {
     try {
 
      if(!mongoose.isObjectIdOrHexString(conversationedUserId)) throw new ApiError(401, "Invalid user Id type");
+
     const docUserId = new mongoose.Types.ObjectId(conversationedUserId!);
 
     const isUserExist = await userModel.findById(docUserId) as IUserDocument
@@ -209,29 +210,28 @@ const getConversationMessages = asyncHandler(async(req, res) => {
 
     const offset = (Number(query.page) - 1) * Number(query.limit);
 
-    // pipelinging to get the conversation message between logged in user and asked user 
+    const conversationId = await conversationModel.findOne({
+      participants :{ $all : [conversationedUserId!, currentLoggedInUser!]}, 
+      is_deleted : false
+    });
 
-   
+    if(!conversationId) throw new ApiError(401, "no conversation found ");
+    
+
+    // pipelinging to get the conversation message between logged in user and asked user 
+    // replace the conversationModel by messagesModel
      const conversation = await conversationModel.aggregate([
              // get the conversation id by matching 
              {
                  $match : {
-                     participants : [conversationedUserId, currentLoggedInUser],
+                     conversation_id : conversationId, 
                      is_deleted : false
                  }
              }, 
- 
-             {
-                 $lookup : {
-                      from : "messages",
-                      localField : "_id",
-                      foreignField : "conversation_Id",
-                      as  : "conversation"
-                 }
-             }, 
+             
              {
                  $sort : {
-                     updatedAt : -1
+                     createdAt : -1
                  }
              }, 
              {
