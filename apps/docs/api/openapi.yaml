@@ -1,0 +1,851 @@
+openapi: 3.0.3
+info:
+  title: Chat App API
+  description: |
+    REST API for the Chat App real-time messaging platform.
+
+    ## Authentication
+    - **Bearer JWT**: `Authorization: Bearer <accessToken>`
+    - **Cookies**: `chatappAccessToken`, `chatappRefreshToken` (httpOnly)
+
+    ## Response Envelope
+    All successful responses wrap data in:
+    ```json
+    { "success": true, "statusCode": 200, "data": {}, "message": "..." }
+    ```
+
+    ## Real-Time
+  version: 1.0.0
+  contact:
+    name: Chat App Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.example.com/api/v1
+    description: Production (replace with your domain)
+
+tags:
+  - name: Auth
+    description: Authentication and registration
+  - name: Users
+    description: User profile and conversation list
+  - name: Conversations
+    description: Direct and group conversation management
+  - name: Messages
+    description: Message read receipts
+  - name: Groups
+    description: Group chat management
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (standalone or SDK)
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/NormalLoginBody'
+                - $ref: '#/components/schemas/SdkLoginBody'
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: chatappAccessToken, chatappRefreshToken
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthTokensResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and invalidate refresh token
+      operationId: logout
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+
+  /auth/preregister:
+    post:
+      tags: [Auth]
+      summary: Check phone availability before registration
+      operationId: preregister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, phone_number]
+              properties:
+                type:
+                  type: string
+                  enum: [normal]
+                phone_number:
+                  type: string
+                  example: "9800000000"
+      responses:
+        '200':
+          description: Phone check result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          isUser:
+                            type: boolean
+                          otpVerified:
+                            type: boolean
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register standalone user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, phone_number, password, confirm_password]
+              properties:
+                type:
+                  type: string
+                  enum: [normal]
+                phone_number:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                confirm_password:
+                  type: string
+                  format: password
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /auth/sso/login:
+    post:
+      tags: [Auth]
+      summary: SSO login for tenant/SDK users
+      description: |
+        Requires:
+        - `Origin` header matching tenant configuration
+        - `Authorization: Bearer <partnerJWT>` signed with tenant's `access_token_secret`
+        - Body with `type: sdk` and `api_key`
+      operationId: ssoLogin
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+            example: https://partner.example.com
+      security:
+        - partnerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, api_key]
+              properties:
+                type:
+                  type: string
+                  enum: [sdk]
+                api_key:
+                  type: string
+      responses:
+        '200':
+          description: SSO login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthTokensResponse'
+
+  /auth/sdk/register:
+    post:
+      tags: [Auth]
+      summary: Register/provision tenant user via SDK
+      operationId: sdkRegister
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+      security:
+        - partnerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, api_key]
+              properties:
+                type:
+                  type: string
+                  enum: [sdk]
+                api_key:
+                  type: string
+      responses:
+        '200':
+          description: User provisioned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile (standalone only)
+      operationId: getMyProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile fetched
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+        '403':
+          description: Tenant users cannot access profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags: [Users]
+      summary: Update current user profile (standalone only)
+      operationId: updateMyProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileBody'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+
+  /users/getAllConversationUsers:
+    get:
+      tags: [Users]
+      summary: List all conversations for current user
+      operationId: getConversations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conversation list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConversationListItem'
+
+  /users/conv-message/{conversationedUserId}:
+    get:
+      tags: [Users]
+      summary: Get direct message history with a user
+      operationId: getDirectMessages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: conversationedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Messages fetched
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConversationMessagesResponse'
+
+  /users/search:
+    get:
+      tags: [Users]
+      summary: Search users by phone number
+      operationId: searchUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Phone substring to search
+      responses:
+        '200':
+          description: Matching users (max 10)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserSearchResult'
+
+  /conversations/direct:
+    post:
+      tags: [Conversations]
+      summary: Create or get direct conversation
+      operationId: createDirectConversation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipientId]
+              properties:
+                recipientId:
+                  type: string
+                  description: MongoDB ObjectId of recipient
+      responses:
+        '200':
+          description: Conversation ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccess'
+
+  /conversations/{conversationId}/messages:
+    get:
+      tags: [Conversations]
+      summary: Get messages by conversation ID (direct or group)
+      operationId: getMessagesByConversationId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Messages fetched
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConversationMessagesResponse'
+
+  /messages/{conversationId}/seen:
+    post:
+      tags: [Messages]
+      summary: Mark all unseen messages in conversation as seen
+      operationId: markConversationSeen
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages marked seen
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          messages:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Message'
+
+  /groups:
+    post:
+      tags: [Groups]
+      summary: Create a group chat
+      operationId: createGroup
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupBody'
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CreateGroupResponse'
+
+  /groups/conversation/{conversationId}:
+    get:
+      tags: [Groups]
+      summary: Get group details by conversation ID
+      operationId: getGroupByConversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GroupDetailsResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Chat app access token from login or SSO
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: chatappAccessToken
+    partnerJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Partner-signed JWT for SSO (separate from chat app token)
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+  schemas:
+    ApiSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          type: object
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
+    NormalLoginBody:
+      type: object
+      required: [type, phone_number, password]
+      properties:
+        type:
+          type: string
+          enum: [normal]
+        phone_number:
+          type: string
+        password:
+          type: string
+          format: password
+
+    SdkLoginBody:
+      type: object
+      required: [type, api_key]
+      properties:
+        type:
+          type: string
+          enum: [sdk]
+        api_key:
+          type: string
+
+    AuthTokensResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        full_name:
+          type: string
+        phone_number:
+          type: string
+        email:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [normal, tenant]
+        tenant_id:
+          type: string
+          nullable: true
+
+    UserProfile:
+      type: object
+      properties:
+        _id:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+        type:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        full_name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+          nullable: true
+
+    UserSearchResult:
+      type: object
+      properties:
+        _id:
+          type: string
+        full_name:
+          type: string
+        avatar:
+          type: string
+        phone_number:
+          type: string
+
+    ConversationListItem:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Conversation ID
+        is_group:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        unreadCount:
+          type: integer
+        displayInfo:
+          type: object
+          properties:
+            _id:
+              type: string
+            fullname:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+              nullable: true
+            isOnline:
+              type: boolean
+        lastMessage:
+          type: object
+          properties:
+            text:
+              type: string
+            createdAt:
+              type: string
+            author:
+              type: string
+            status:
+              type: string
+              enum: [sending, sent, delivered, seen, failed]
+
+    ConversationMessagesResponse:
+      type: object
+      properties:
+        conversation:
+          type: object
+          nullable: true
+          properties:
+            _id:
+              type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+        author:
+          type: string
+        conversation_Id:
+          type: string
+        text:
+          type: string
+        status:
+          type: string
+          enum: [sending, sent, delivered, seen, failed]
+        clientMessageId:
+          type: string
+        delivered_at:
+          type: string
+          format: date-time
+          nullable: true
+        seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        authorProfile:
+          type: object
+          description: Present on group messages
+          properties:
+            _id:
+              type: string
+            full_name:
+              type: string
+            avatar:
+              type: string
+              nullable: true
+
+    CreateGroupBody:
+      type: object
+      required: [name, memberIds]
+      properties:
+        name:
+          type: string
+        memberIds:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        avatar:
+          type: string
+          nullable: true
+
+    CreateGroupResponse:
+      type: object
+      properties:
+        group:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+              nullable: true
+        conversation:
+          type: object
+          properties:
+            _id:
+              type: string
+
+    GroupDetailsResponse:
+      type: object
+      properties:
+        group:
+          type: object
+        conversation:
+          type: object
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSearchResult'
