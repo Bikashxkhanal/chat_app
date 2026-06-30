@@ -44,4 +44,6 @@ const conversationSchema = new Schema<IConversation>(
     }
 )
 
+conversationSchema.index({ participants: 1, is_deleted: 1 });
+
 export const conversationModel = model<IConversation>('Conversation', conversationSchema);

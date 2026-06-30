@@ -63,6 +63,10 @@ const userSchema = new Schema<IUserDocument, UserModel, IUserMethods>({
         type : Date,
         required : true,
         default : Date.now 
+    },
+    last_active_at : {
+        type : Date,
+        default : Date.now
     }
 
 }, 
