@@ -1,27 +1,28 @@
 export const chatEventEnums = Object.freeze({
-      // ? once user is ready to go
   CONNECTED_EVENT: "connected",
-  // ? when user gets disconnected
   DISCONNECT_EVENT: "disconnect",
-  // ? when user joins a socket room
+  RECONNECTING_EVENT: "reconnecting",
   JOIN_CHAT_EVENT: "joinChat",
-  // ? when participant gets removed from group, chat gets deleted or leaves a group
   LEAVE_CHAT_EVENT: "leaveChat",
-  // ? when admin updates a group name
   UPDATE_GROUP_NAME_EVENT: "updateGroupName",
-  // ? when new message is received
+  CONVERSATION_CREATED_EVENT: "conversationCreated",
+  CONVERSATION_UPDATED_EVENT: "conversationUpdated",
   MESSAGE_RECEIVED_EVENT: "messageReceived",
-  // ? when there is new one on one chat, new group chat or user gets added in the group
-  NEW_CHAT_EVENT: "newChat",
-  // ? when there is an error in socket
-  SOCKET_ERROR_EVENT: "socketError",
-  // ? when participant stops typing
-  STOP_TYPING_EVENT: "stopTyping",
-  // ? when participant starts typing
-  TYPING_EVENT: "typing",
-  // ? when message is deleted
+  MESSAGE_SENT_EVENT: "messageSent",
+  MESSAGE_DELIVERED_EVENT: "messageDelivered",
+  MESSAGE_SEEN_EVENT: "messageSeen",
+  MESSAGE_ACK_EVENT: "messageAck",
   MESSAGE_DELETE_EVENT: "messageDeleted",
-
-})
+  MESSAGE_EDITED_EVENT: "messageEdited",
+  SEND_MESSAGE_EVENT: "sendMessage",
+  MARK_SEEN_EVENT: "markSeen",
+  NEW_CHAT_EVENT: "newChat",
+  SOCKET_ERROR_EVENT: "socketError",
+  STOP_TYPING_EVENT: "stopTyping",
+  TYPING_EVENT: "typing",
+  USER_ONLINE_EVENT: "userOnline",
+  USER_OFFLINE_EVENT: "userOffline",
+  TOKEN_EXPIRED_EVENT: "tokenExpired",
+});
 
 export const AvailableChatEvents = Object.values(chatEventEnums);

@@ -12,5 +12,11 @@
             "require" : "./src/index.ts",
             "default" : "./src/index.ts"
         }
-    }
+    },
+  "scripts": {
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.3"
+  }
 }

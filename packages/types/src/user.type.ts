@@ -14,6 +14,7 @@ export interface IUser{
     hashed_password : string;
     refresh_token : string;
     last_logged_in : Date;
+    last_active_at? : Date;
     createdAt : Date;
     updatedAt : Date;
 
