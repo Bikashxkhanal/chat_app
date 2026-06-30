@@ -1,70 +1,53 @@
+import { useState } from "react";
 import ConversationHeader from "./header.conversation";
 import ConversationList from "./list.conversation";
-import type { UserCardProps } from "@repo/types";
-
-
-
-const seedCOnversationListData : UserCardProps[] = [
-    {
-        full_name : "Bikash Khanal",
-        avatar : null,
-        lastMessage : "Hi, there",
-        messageStatus : "received_unseen",
-        timestamp : "10:30"
-        
-    },
-    {
-        full_name : "Bikash Khanal",
-        avatar : null,
-        lastMessage : "Hi, there",
-        messageStatus : "received_unseen",
-        timestamp : "02:30"
-        
-    },
-    {
-        full_name : "Bikash Khanal",
-        avatar : null,
-        lastMessage : "Hi, there",
-        messageStatus : "sent",
-        timestamp : "04:30"
-        
-    }
-    ,{
-        full_name : "Bikash Khanal",
-        avatar : null,
-        lastMessage : "Hi, there",
-        messageStatus : "received_seen",
-        timestamp : "06:30"
-        
-    }
-]
-
+import { useChat } from "../../context/chatContext";
+import NewChatModal from "./new.chat.modal";
+import CreateGroupModal from "./create.group.modal";
 
 const ConversationBar = () => {
+  const { conversations, isLoadingConversations, selectChat } = useChat();
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
 
-    return (
-        <>
-        <div className="
-        w-screen
-        md:w-100
-        shrink-0
-        min-h-screen md:left-20 md:top-0 
-        md:px-4 md:border-r 
-        
-        ">
-            {
-                <ConversationHeader />
-            }
+  return (
+    <>
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-[var(--surface)] mobile-list-pad">
+        <ConversationHeader
+          onNewChat={() => setShowNewChat(true)}
+          onNewGroup={() => setShowNewGroup(true)}
+        />
 
-            {
-                <ConversationList conversationList={seedCOnversationListData} />
-            }
-            
-
-
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {isLoadingConversations ? (
+            <p className="text-center text-[var(--fg-muted)] text-sm py-8">Loading...</p>
+          ) : conversations.length === 0 ? (
+            <p className="text-center text-[var(--fg-muted)] text-sm py-8 px-4">
+              No conversations yet
+            </p>
+          ) : (
+            <ConversationList
+              conversationList={conversations}
+              onSelect={(card) => {
+                if (!card.conversationId) return;
+                selectChat({
+                  conversationId: card.conversationId,
+                  userId: card.isGroup ? undefined : card.userId,
+                  groupId: card.groupId,
+                  isGroup: card.isGroup,
+                  full_name: card.full_name,
+                  avatar: card.avatar,
+                });
+              }}
+            />
+          )}
         </div>
-        </>
-    )
-}
+      </div>
 
-export default ConversationBar
+      <NewChatModal open={showNewChat} onClose={() => setShowNewChat(false)} />
+      <CreateGroupModal open={showNewGroup} onClose={() => setShowNewGroup(false)} />
+    </>
+  );
+};
+
+export default ConversationBar;

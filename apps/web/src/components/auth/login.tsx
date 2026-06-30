@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Input } from "../common/input";
 import Button from "../common/button";
-import { login } from "../../services/auth.service";
-import { AUTH_ROLE } from "@repo/types";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
 
 const COUNTRY_CODES = [
   { code: "+977", flag: "🇳🇵", name: "NP" },
@@ -25,7 +23,7 @@ export default function Login({ onSuccess, onSignupClick }: LoginProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const fullNumber = `${countryCode}${phone.replace(/\D/g, "")}`;
 
@@ -44,12 +42,10 @@ export default function Login({ onSuccess, onSignupClick }: LoginProps) {
     try {
       setLoading(true);
       await login({
-        type : AUTH_ROLE.NORMAL,
-        phone_number : fullNumber,
-        password : password
-      })
+        phone_number: fullNumber,
+        password,
+      });
       onSuccess();
-      navigate('/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid phone number or password.");
     } finally {

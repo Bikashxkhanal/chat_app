@@ -36,10 +36,18 @@ export interface ApiResponse<T = unknown> {
 export interface User {
   _id: string;
   phone_number: string;
+  full_name?: string;
+  avatar?: string;
   tenant_id?: string;
   refresh_token?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface LoginResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
 }
 
 // ─── Navigation State shared between PreSignup → Signup ───────────────────────

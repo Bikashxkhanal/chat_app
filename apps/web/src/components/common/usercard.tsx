@@ -1,243 +1,77 @@
-import { useState } from "react";
-import  type { UserCardProps, MessageStatus } from "@repo/types";
- 
- 
-const statusStyles: Record<MessageStatus, { dot: string; text: string; bg: string }> = {
-  received_unseen: {
-    dot: "#22c55e",
-    text: "#14532d",
-    bg: "rgba(34,197,94,0.10)",
-  },
-  received_seen: {
-    dot: "transparent",
-    text: "#94a3b8",
-    bg: "transparent",
-  },
-  sent: {
-    dot: "transparent",
-    text: "#94a3b8",
-    bg: "transparent",
-  },
+import type { UserCardProps, MessageStatus } from "@repo/types";
+import { Avatar } from "./avatar";
+
+const statusColor: Record<MessageStatus, string> = {
+  received_unseen: "var(--fg)",
+  received_seen: "var(--fg-muted)",
+  sent: "var(--fg-muted)",
+  delivered: "var(--fg-muted)",
+  seen: "var(--accent)",
+  failed: "var(--danger)",
+  sending: "var(--fg-muted)",
 };
- 
-function getInitials(full_name: string) {
-  return full_name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
- 
+
 export function UserCard({
   avatar,
   full_name,
   lastMessage,
   messageStatus,
   timestamp,
+  unreadCount = 0,
+  isOnline,
+  isGroup,
   onClick,
 }: UserCardProps) {
-  const [hovered, setHovered] = useState(false);
-  const style = statusStyles[messageStatus];
-  const isUnseen = messageStatus === "received_unseen";
-  const isSent = messageStatus === "sent";
- 
+  const hasUnread = unreadCount > 0;
+  const isSent = ["sent", "delivered", "seen", "sending"].includes(messageStatus);
+
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        padding: "12px 16px",
-        borderRadius: "16px",
-        cursor: "pointer",
-        background: hovered
-          ? "rgba(255,255,255,0.06)"
-          : isUnseen
-          ? "rgba(34,197,94,0.04)"
-          : "transparent",
-        transition: "background 0.18s ease",
-        position: "relative",
-        userSelect: "none",
-      }}
+      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors hover:bg-[var(--surface-hover)]"
     >
-      {/* Avatar */}
-      <div
-        style={{
-          position: "relative",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            overflow: "hidden",
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 700,
-            fontSize: "16px",
-            color: "#fff",
-            letterSpacing: "0.03em",
-            boxShadow: isUnseen
-              ? "0 0 0 2px rgba(34,197,94,0.5)"
-              : "0 0 0 2px rgba(255,255,255,0.06)",
-            transition: "box-shadow 0.2s",
-          }}
-        >
-          {avatar ? (
-            <img
-              src={avatar}
-              alt={full_name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            getInitials(full_name)
-          )}
-        </div>
-        {/* Online indicator for unseen */}
-        {isUnseen && (
+      <div className="relative shrink-0">
+        <Avatar name={full_name} src={avatar} size={44} />
+        {isOnline && !isGroup && (
           <span
-            style={{
-              position: "absolute",
-              bottom: 1,
-              right: 1,
-              width: 11,
-              height: 11,
-              borderRadius: "50%",
-              background: "#22c55e",
-              border: "2px solid #0f172a",
-              boxSizing: "border-box",
-            }}
+            className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--surface)]"
+            style={{ background: "var(--online)" }}
           />
         )}
       </div>
- 
-      {/* Text content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 3,
-          }}
-        >
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2 mb-0.5">
           <span
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: isUnseen ? 500 : 500,
-              fontSize: "15px",
-              color: isUnseen ? "#222222" : "#37774f",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              letterSpacing: "-0.01em",
-            }}
+            className={`text-sm truncate ${hasUnread ? "font-semibold text-[var(--fg)]" : "font-medium text-[var(--fg)]"}`}
           >
             {full_name}
           </span>
           {timestamp && (
-            <span
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "11px",
-                color: isUnseen ? "#22c55e" : "#475569",
-                fontWeight: isUnseen ? 600 : 400,
-                flexShrink: 0,
-                marginLeft: 8,
-              }}
-            >
-              {timestamp}
-            </span>
+            <span className="text-[11px] text-[var(--fg-muted)] shrink-0">{timestamp}</span>
           )}
         </div>
- 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          {/* Sent double-tick icon */}
-          {isSent && (
-            <svg
-              width="16"
-              height="10"
-              viewBox="0 0 16 10"
-              fill="none"
-              style={{ flexShrink: 0 }}
-            >
-              <path
-                d="M1 5L4.5 8.5L10.5 1.5"
-                stroke="#64748b"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M5 5L8.5 8.5L14.5 1.5"
-                stroke="#64748b"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
- 
+
+        <div className="flex items-center gap-2">
           <span
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "13.5px",
-              fontWeight: isUnseen ? 500 : 400,
-              color: style.text,
-              background: isUnseen ? style.bg : "transparent",
-              padding: isUnseen ? "1px 7px" : "0",
-              borderRadius: isUnseen ? "20px" : "0",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: "200px",
-              display: "inline-block",
-              lineHeight: "1.6",
-              transition: "all 0.2s",
-            }}
+            className="text-xs truncate flex-1"
+            style={{ color: statusColor[messageStatus] }}
           >
+            {isSent ? "You: " : ""}
             {lastMessage}
           </span>
- 
-          {/* Unread badge */}
-          {isUnseen && (
+
+          {hasUnread && (
             <span
-              style={{
-                marginLeft: "auto",
-                flexShrink: 0,
-                background: "#22c55e",
-                color: "#fff",
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: "11px",
-                borderRadius: "50%",
-                width: 20,
-                height: 20,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="shrink-0 min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold text-white flex items-center justify-center"
+              style={{ background: "var(--unread)" }}
             >
-              1
+              {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 }

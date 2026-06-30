@@ -6,10 +6,12 @@ import { UserCard } from "../common/usercard"
 
 interface ConversationListProps { 
     conversationList : UserCardProps[]
+    onSelect?: (card: UserCardProps) => void
 }
 
 function ConversationList({
-    conversationList
+    conversationList,
+    onSelect
 } : ConversationListProps) {
     return(
         <>
@@ -18,7 +20,11 @@ function ConversationList({
         md:w-full md:pt-4   
         ">{
             conversationList.map((eachConv, idx) =>(
-               <UserCard key={idx} {...eachConv} />
+               <UserCard
+                 key={eachConv.conversationId ?? idx}
+                 {...eachConv}
+                 onClick={() => onSelect?.(eachConv)}
+               />
             ) )
         }
 

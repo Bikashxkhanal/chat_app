@@ -1,6 +1,94 @@
 @import "tailwindcss";
 
-@theme { 
-    --font-roboto: "Roboto Condensed", sans-serif;
-    --font-oswald : "Oswald", sans-sarif;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-roboto: "Roboto Condensed", sans-serif;
+  --font-oswald: "Oswald", sans-serif;
+}
+
+:root {
+  --bg: #ffffff;
+  --bg-muted: #f8fafc;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --fg: #0f172a;
+  --fg-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-muted: #eef2ff;
+  --bubble-own: #4f46e5;
+  --bubble-own-fg: #ffffff;
+  --bubble-other: #f1f5f9;
+  --bubble-other-fg: #0f172a;
+  --online: #22c55e;
+  --danger: #ef4444;
+  --success: #16a34a;
+  --unread: #4f46e5;
+}
+
+.dark {
+  --bg: #0b1120;
+  --bg-muted: #0f172a;
+  --surface: #111827;
+  --surface-hover: #1e293b;
+  --fg: #f8fafc;
+  --fg-muted: #94a3b8;
+  --border: #1e293b;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-muted: #1e1b4b;
+  --bubble-own: #4f46e5;
+  --bubble-own-fg: #ffffff;
+  --bubble-other: #1e293b;
+  --bubble-other-fg: #f1f5f9;
+  --online: #22c55e;
+  --danger: #f87171;
+  --success: #4ade80;
+  --unread: #818cf8;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Mobile bottom tab bar — ~56px + safe area */
+.mobile-tab-bar {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Space above tab bar on conversation list */
+.mobile-list-pad {
+  padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .mobile-list-pad {
+    padding-bottom: 0;
+  }
+}
+
+/* Chat header safe area (notch) */
+.mobile-header-pad {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@media (min-width: 768px) {
+  .mobile-header-pad {
+    padding-top: 0.75rem;
+  }
+}
+
+/* Chat input safe area (home indicator) */
+.mobile-input-pad {
+  padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .mobile-input-pad {
+    padding-bottom: 0.625rem;
+  }
 }

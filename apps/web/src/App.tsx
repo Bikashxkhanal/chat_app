@@ -1,21 +1,52 @@
 import { type JSX } from "react";
-import { createBrowserRouter, RouterProvider, Navigate, useNavigate, useLocation, Outlet } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  useNavigate,
+  useLocation,
+  Outlet,
+} from "react-router-dom";
 import "./App.css";
 import Login from "./components/auth/login";
 import PreSignup from "./components/auth/presignup";
 import Signup from "./components/auth/signup";
 import type { PreSignupState } from "./types/auth.types";
-import Sidebar from "./components/dashboard/sidebar";
 import DashboardPage from "./page/dashboard";
+import SettingsPage from "./page/settings";
+import { AuthProvider } from "./context/authContext";
+import { ThemeProvider } from "./context/themeContext";
+import { LocalStorage } from "./utils";
+
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const token = LocalStorage.get("accessToken");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+function RootLayout(): JSX.Element {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
 
 function LoginRoute(): JSX.Element {
   const navigate = useNavigate();
+  const token = LocalStorage.get("accessToken");
+
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <Login
-      onSuccess={() => {
-        // TODO: navigate into the actual app / chat dashboard
-        console.log("Logged in!");
-      }}
+      onSuccess={() => navigate("/dashboard")}
       onSignupClick={() => navigate("/signup")}
     />
   );
@@ -36,8 +67,6 @@ function PreSignupRoute(): JSX.Element {
 function SignupRoute(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Use React Router's native state tracking instead of window.history
   const state = location.state as PreSignupState | null;
 
   if (!state) {
@@ -45,46 +74,56 @@ function SignupRoute(): JSX.Element {
   }
 
   return (
-    <Signup
-      preSignupState={state}
-      onSuccess={() => navigate("/login")}
-    />
+    <Signup preSignupState={state} onSuccess={() => navigate("/login")} />
   );
 }
 
-// 1. Create the router configuration with children
 const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <LoginRoute />,
-  },
-  {
-    path: "/signup",
-    // We wrap signup paths in a simple layout block so they can branch out naturally
-    element: <Outlet />, 
+    element: <RootLayout />,
     children: [
       {
-        index: true, // Handles exactly "/signup"
-        element: <PreSignupRoute />,
+        path: "/login",
+        element: <LoginRoute />,
       },
       {
-        path: "create-password", // Handles "/signup/create-password"
-        element: <SignupRoute />,
+        path: "/signup",
+        element: <Outlet />,
+        children: [
+          {
+            index: true,
+            element: <PreSignupRoute />,
+          },
+          {
+            path: "create-password",
+            element: <SignupRoute />,
+          },
+        ],
+      },
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/settings",
+        element: (
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "*",
+        element: <Navigate to="/login" replace />,
       },
     ],
   },
-  { 
-    path : '/dashboard', 
-    element : <DashboardPage />
-
-  },
-  {
-    path: "*",
-    element: <Navigate to="/login" replace />,
-  },
 ]);
 
-// 2. Render using RouterProvider
 function App(): JSX.Element {
   return <RouterProvider router={router} />;
 }

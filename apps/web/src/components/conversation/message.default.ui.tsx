@@ -1,24 +1,25 @@
-import {MessageSquarePlusIcon } from 'lucide-react'
+import { MessageSquarePlus } from "lucide-react";
+import { useState } from "react";
+import NewChatModal from "./new.chat.modal";
 
-interface CreateMessage {
-    handleCreateNewConversation? : (e : React.MouseEvent<HTMLDivElement>) => void
-}
+const DefaultMessageUI = () => {
+  const [showNewChat, setShowNewChat] = useState(false);
 
-const DefaultMessageUI = ({
-    handleCreateNewConversation
-} : CreateMessage ) => {
-    return(
-        <>
-        <div className="
-        fixed bottom-30 right-10
-        md:static flex-1 md:h-screen md:flex md:flex-row md:justify-center md:items-center cursor-pointer"
-         onClick={(e) => handleCreateNewConversation(e)}>     
-            <div className=' border p-4 md:p-8 rounded-2xl bg-[#32CD32] border-[#32CD32]' >
-                <MessageSquarePlusIcon size={34} color='#32CD32' fill='white' />
-            </div>
-        </div>
-        </>
-    )
-}
+  return (
+    <>
+      <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-[var(--bg)] gap-3">
+        <button
+          type="button"
+          onClick={() => setShowNewChat(true)}
+          className="p-4 rounded-2xl border border-[var(--border)] text-[var(--accent)] hover:bg-[var(--surface-hover)] transition-colors"
+        >
+          <MessageSquarePlus size={32} />
+        </button>
+        <p className="text-sm text-[var(--fg-muted)]">Select a chat or start a new one</p>
+      </div>
+      <NewChatModal open={showNewChat} onClose={() => setShowNewChat(false)} />
+    </>
+  );
+};
 
 export default DefaultMessageUI;
