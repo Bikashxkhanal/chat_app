@@ -1,4 +1,6 @@
-export class ApiError extends Error{
+import type { ApiErrorResponseInterface } from "../../../types/src/api.type";
+
+export class ApiError extends Error implements ApiErrorResponseInterface{
     statusCode : number;
     errors : string[];
     data :null;
@@ -13,6 +15,8 @@ export class ApiError extends Error{
        this.errors = errors;
        this.data = null;
        this.success = false
+
+       Object.setPrototypeOf(this, ApiError.prototype);
 
     }
 }
