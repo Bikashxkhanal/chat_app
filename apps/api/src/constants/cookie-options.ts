@@ -1,12 +1,14 @@
 
-type cookieSameSite = "none" | "strict" | "lax"
+type cookieSameSite = "none" | "strict" | "lax";
 
-export const cookieOptions : {secure : boolean, httpOnly : boolean, sameSite : cookieSameSite} = {
-    secure : true,
-    httpOnly : true,
-    sameSite : "none", 
+const isProduction = process.env.NODE_ENV === "production";
+
+export const cookieOptions: {
+  secure: boolean;
+  httpOnly: boolean;
+  sameSite: cookieSameSite;
+} = {
+  secure: isProduction,
+  httpOnly: true,
+  sameSite: isProduction ? "none" : "lax",
 };
-
-
-
-

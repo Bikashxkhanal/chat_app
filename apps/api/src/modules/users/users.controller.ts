@@ -1,260 +1,261 @@
 import { ApiError, ApiResponse } from "@repo/utils";
 import { asyncHandler } from "../../utils";
-import { conversationModel, userModel } from "@repo/db-nosql";
-import mongoose, { Aggregate, Mongoose } from "mongoose";
-import { IUserDocument, UserDocument } from "@repo/types";
+import { conversationModel, MessageModel, userModel } from "@repo/db-nosql";
+import mongoose from "mongoose";
+import type { IUserDocument } from "@repo/types";
+import { presenceStore } from "../../services/presence.store";
+import { enrichMessagesWithAuthors } from "../../services/message.service";
 
 type PageAndLimit = {
-    page : number ,
-    limit : number
-}
-
-// get the users details avatar name, last message, last seen time associated with the current logged in user
+  page: number;
+  limit: number;
+};
 
 const getAssociatedUsersDetails = asyncHandler(async (req, res) => {
-    const user = req.user;
-    if(!user) throw new ApiError(402, "Unauthorized request");
+  const user = req.user;
+  if (!user) throw new ApiError(401, "Unauthorized request");
 
-    const currentUserId =new mongoose.Types.ObjectId(user._id);
+  const currentUserId = new mongoose.Types.ObjectId(user._id);
 
-    try {
-        
-const associatedUsers = await conversationModel.aggregate([
-  //  Match logged-in user's conversations
+  const associatedUsers = await conversationModel.aggregate([
     {
-        $match: {
+      $match: {
         participants: currentUserId,
-        is_deleted: false
-        }
-    },
-
-  //  Extract other participant (direct chat)
-  {
-    $addFields: {
-      otherParticipant: {
-        $arrayElemAt: [
-          {
-            $filter: {
-              input: "$participants",
-              as: "p",
-              cond: {
-                $ne: ["$$p", currentUserId]
-              }
-            }
-          },
-          0
-        ]
-      }
-    }
-  },
-
-  // USER lookup (ONLY used when isGroup is null)
-  {
-    $lookup: {
-      from: "users",
-      localField: "otherParticipant",
-      foreignField: "_id",
-      pipeline: [
-        {
-          $project: {
-            fullname: 1,
-            avatar: 1
-          }
-        }
-      ],
-      as: "userInfo"
-    }
-  },
-
-  {
-    $unwind: {
-      path: "$userInfo",
-      preserveNullAndEmptyArrays: true
-    }
-  },
-
-  //GROUP lookup (ONLY used when isGroup exists)
-  {
-    $lookup: {
-      from: "groups",
-      localField: "is_group",   
-      foreignField: "_id",
-      pipeline: [
-        {
-          $project: {
-            name: 1,
-            avatar: 1
-          }
-        }
-      ],
-      as: "groupInfo"
-    }
-  },
-
-  {
-    $unwind: {
-      path: "$groupInfo",
-      preserveNullAndEmptyArrays: true
-    }
-  },
-
-  //  Get last message
-  {
-    $lookup: {
-      from: "messages",
-      let: {
-        conversationId: "$_id"
+        is_deleted: false,
       },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ["$conversationId", "$$conversationId"]
-            }
-          }
+    },
+    {
+      $addFields: {
+        otherParticipant: {
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$participants",
+                as: "p",
+                cond: { $ne: ["$$p", currentUserId] },
+              },
+            },
+            0,
+          ],
         },
-        {
-          $sort: {
-            createdAt: -1
-          }
-        },
-        {
-          $limit: 1
-        },
-        {
-          $project: {
-            text: 1,
-            createdAt: 1
-          }
-        }
-      ],
-      as: "lastMessage"
-    }
-  },
-
-  {
-    $unwind: {
-      path: "$lastMessage",
-      preserveNullAndEmptyArrays: true
-    }
-  },
-
-  // smart conditional switch
-  {
-    $project: {
-      _id: 1,
-      isGroup: 1,
-      updatedAt: 1,
-      lastMessage: 1,
-
-      displayInfo: {
-        $cond: {
-          if: {
-            $ne: ["$isGroup", null]   // group chat
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "otherParticipant",
+        foreignField: "_id",
+        pipeline: [{ $project: { full_name: 1, avatar: 1, last_active_at: 1 } }],
+        as: "userInfo",
+      },
+    },
+    {
+      $unwind: {
+        path: "$userInfo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "groups",
+        localField: "group_id",
+        foreignField: "_id",
+        pipeline: [{ $project: { name: 1, avatar: 1 } }],
+        as: "groupInfo",
+      },
+    },
+    {
+      $unwind: {
+        path: "$groupInfo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "messages",
+        let: { conversationId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$conversation_Id", "$$conversationId"] },
+              is_Deleted: false,
+            },
           },
-          then: {
-            _id: "$groupInfo._id",
-            name: "$groupInfo.name",
-            avatar: "$groupInfo.avatar"
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+          { $project: { text: 1, createdAt: 1, author: 1, status: 1 } },
+        ],
+        as: "lastMessage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$lastMessage",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "messages",
+        let: { conversationId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$conversation_Id", "$$conversationId"] },
+                  { $ne: ["$author", currentUserId] },
+                  { $eq: ["$seen_at", null] },
+                  { $eq: ["$is_Deleted", false] },
+                ],
+              },
+            },
           },
-          else: {
-            _id: "$userInfo._id",
-            fullname: "$userInfo.fullname",
-            avatar: "$userInfo.avatar"
-          }
-        }
-      }
-    }
-  },
+          { $count: "count" },
+        ],
+        as: "unread",
+      },
+    },
+    {
+      $addFields: {
+        unreadCount: {
+          $ifNull: [{ $arrayElemAt: ["$unread.count", 0] }, 0],
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        is_group: 1,
+        updatedAt: 1,
+        lastMessage: 1,
+        unreadCount: 1,
+        displayInfo: {
+          $cond: {
+            if: "$is_group",
+            then: {
+              _id: "$groupInfo._id",
+              name: "$groupInfo.name",
+              avatar: "$groupInfo.avatar",
+            },
+            else: {
+              _id: "$userInfo._id",
+              fullname: "$userInfo.full_name",
+              avatar: "$userInfo.avatar",
+              lastActiveAt: "$userInfo.last_active_at",
+            },
+          },
+        },
+      },
+    },
+    { $sort: { updatedAt: -1 } },
+  ]);
 
-  //Sort latest first
-  {
-    $sort: {
-      updatedAt: -1
-    }
+  const withPresence = associatedUsers.map((conv) => ({
+    ...conv,
+    displayInfo: conv.displayInfo
+      ? {
+          ...conv.displayInfo,
+          isOnline: presenceStore.isOnline(conv.displayInfo._id?.toString()),
+        }
+      : conv.displayInfo,
+  }));
+
+  return res.json(
+    new ApiResponse(200, withPresence, "Associated users fetched successfully")
+  );
+});
+
+const getConversationMessages = asyncHandler(async (req, res) => {
+  const conversationedUserId = req.params.conversationedUserId as string;
+  const query = req.query as unknown as PageAndLimit;
+  const currentLoggedInUser = req.user!;
+
+  if (!conversationedUserId) throw new ApiError(400, "User id is required");
+
+  if (!mongoose.isObjectIdOrHexString(conversationedUserId)) {
+    throw new ApiError(400, "Invalid user id");
   }
-]);
 
-return res.json(
-    new ApiResponse(200, 
-        associatedUsers, 
-        "Associated Users fetched successfully"
+  const otherUser = (await userModel.findById(conversationedUserId)) as IUserDocument | null;
+  if (!otherUser) throw new ApiError(404, "User not found");
+
+  if (
+    currentLoggedInUser.tenant_id &&
+    otherUser.tenant_id &&
+    currentLoggedInUser.tenant_id.toString() !== otherUser.tenant_id.toString()
+  ) {
+    throw new ApiError(403, "Cannot access messages from another tenant");
+  }
+
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 30;
+  const offset = (page - 1) * limit;
+
+  const conversation = await conversationModel.findOne({
+    participants: {
+      $all: [
+        new mongoose.Types.ObjectId(currentLoggedInUser._id),
+        new mongoose.Types.ObjectId(conversationedUserId),
+      ],
+    },
+    is_deleted: false,
+    is_group: false,
+  });
+
+  if (!conversation) {
+    return res.json(
+      new ApiResponse(200, { conversation: null, messages: [] }, "No conversation found")
+    );
+  }
+
+  const messages = await MessageModel.find({
+    conversation_Id: conversation._id,
+    is_Deleted: false,
+  } as Record<string, unknown>)
+    .sort({ createdAt: -1 })
+    .skip(offset)
+    .limit(limit)
+    .lean();
+
+  const enriched = await enrichMessagesWithAuthors(
+    messages as unknown as Parameters<typeof enrichMessagesWithAuthors>[0]
+  );
+
+  return res.json(
+    new ApiResponse(
+      200,
+      { conversation, messages: enriched.reverse() },
+      "Messages fetched successfully"
     )
-)
-    } catch (error : any) {
-        throw new ApiError(500, error.message || "Invalid server error"); 
-    }
-})
+  );
+});
 
-// this controller will return the messages of the conversation between the logged in user and the asked user,(only one to one , not a messaging);
-const getConversationMessages = asyncHandler(async(req, res) => {
-    // get the user to whom have conversation, with pagination of the messages so that messages will be loaded based on the 
+const searchUsers = asyncHandler(async (req, res) => {
+  const currentUser = req.user;
+  if (!currentUser) throw new ApiError(401, "Unauthorized request");
 
-    const conversationedUserId  =  req.params.conversationedUserId as string
-    const query  = req.query as unknown as PageAndLimit;
+  const phone = (req.query.phone as string)?.trim();
+  if (!phone) throw new ApiError(400, "Phone number is required");
 
-    const currentLoggedInUser = req.user!;
+  const filter: Record<string, unknown> = {
+    phone_number: { $regex: phone, $options: "i" },
+    _id: { $ne: currentUser._id },
+  };
 
-    if(!conversationedUserId) throw new ApiError(402, "User Id is required");
+  if (currentUser.tenant_id) {
+    filter.tenant_id = currentUser.tenant_id;
+  } else {
+    filter.tenant_id = null;
+  }
 
-    try {
+  const users = await userModel
+    .find(filter)
+    .select("full_name avatar phone_number")
+    .limit(10)
+    .lean();
 
-     if(!mongoose.isObjectIdOrHexString(conversationedUserId)) throw new ApiError(401, "Invalid user Id type");
+  return res.json(new ApiResponse(200, users, "Users found"));
+});
 
-    const docUserId = new mongoose.Types.ObjectId(conversationedUserId!);
-
-    const isUserExist = await userModel.findById(docUserId) as IUserDocument
-    if(!isUserExist) throw new ApiError(400, "Invalid user id");
-
-    if(isUserExist.tenant_id && (isUserExist.tenant_id !== currentLoggedInUser.tenant_id)) throw new ApiError(401, "Unauthorized request, cannot access other tenant user message")
-
-    const offset = (Number(query.page) - 1) * Number(query.limit);
-
-    const conversationId = await conversationModel.findOne({
-      participants :{ $all : [conversationedUserId!, currentLoggedInUser!]}, 
-      is_deleted : false
-    });
-
-    if(!conversationId) throw new ApiError(401, "no conversation found ");
-    
-
-    // pipelinging to get the conversation message between logged in user and asked user 
-    // replace the conversationModel by messagesModel
-     const conversation = await conversationModel.aggregate([
-             // get the conversation id by matching 
-             {
-                 $match : {
-                     conversation_id : conversationId, 
-                     is_deleted : false
-                 }
-             }, 
-             
-             {
-                 $sort : {
-                     createdAt : -1
-                 }
-             }, 
-             {
-                $skip : offset 
-             }, 
-             {
-                 $limit : Number(query.limit)
-             }
-     ])
-
-     return res.json(
-        new ApiResponse(200, conversation, "Conversation of required user fetched successfully!")
-     )
-
- 
-   } catch (error : any) {
-    throw new ApiError(500, error.message || "Server response error");
-   }
-
-})
-
-
-export {
-    getAssociatedUsersDetails,
-    getConversationMessages
-}
+export { getAssociatedUsersDetails, getConversationMessages, searchUsers };

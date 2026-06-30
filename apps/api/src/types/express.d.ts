@@ -1,5 +1,5 @@
 import "express"
-import { UserDocument } from "@repo/types";
+import { UserDocument, partner } from "@repo/types";
 import { partnerUserInfoInTokenType } from "@repo/types";
 
 

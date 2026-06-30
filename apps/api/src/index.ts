@@ -1,32 +1,25 @@
-import dotenv from 'dotenv'
-import path from 'node:path'
-
+import dotenv from "dotenv";
+import path from "node:path";
 
 dotenv.config({
-    path : path.resolve(__dirname, "./../../../.env")
-})
-console.log(__dirname);
+  path: path.resolve(__dirname, "./../../../.env"),
+});
 
-
-import {connectMongoDB} from "@repo/db-nosql";
+import { connectMongoDB } from "@repo/db-nosql";
 import { httpServer } from "./app";
 
+const port = process.env.API_PORT ?? "8000";
 
+(async () => {
+  try {
+    await connectMongoDB();
+    console.log("DB connection established successfully!");
 
-
-;(async() => {
-    
-    try {
-        await connectMongoDB();
-      console.log(`DB connection established successfully!`);
-      
-    } catch (error) {
-        console.log(`Failed to establish db connection!`);
-    }
-})()
-
-httpServer.listen( process.env.API_PORT, () => {
-    console.log(`Server is running on ${process.env.API_PORT}`);
-})
-
-
+    httpServer.listen(port, () => {
+      console.log(`Server is running on ${port}`);
+    });
+  } catch (error) {
+    console.error("Failed to establish db connection!", error);
+    process.exit(1);
+  }
+})();

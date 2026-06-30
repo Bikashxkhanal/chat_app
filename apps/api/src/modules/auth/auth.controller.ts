@@ -3,6 +3,7 @@ import { asyncHandler } from "../../utils";
 import { loginBody , AUTH_ROLE, registerBody, preLocalRegisterBody, partnerUserInfoInTokenType} from "@repo/types";
 import { userModel } from "@repo/db-nosql";
 import { cookieOptions } from "../../constants/index";
+import { findOrCreateTenantUser } from "../../services/tenant-user.service";
 
 
 export const login = asyncHandler(async (req, res, next) => {
@@ -52,7 +53,7 @@ export const login = asyncHandler(async (req, res, next) => {
          const accessToken = user.generateAccessToken();
          const refreshToken = user.generateRefreshToken();
 
-         const userWithRefreshToken = await userModel.findByIdAndUpdate(user._id, {refresh_token : refreshToken}, {new : true}).select("--hashed_password");
+         const userWithRefreshToken = await userModel.findByIdAndUpdate(user._id, {refresh_token : refreshToken}, {new : true}).select("-hashed_password -refresh_token");
 
             //  cookie also need to be setuped
             
@@ -62,7 +63,7 @@ export const login = asyncHandler(async (req, res, next) => {
                         .json(
                                 new ApiResponse(
                                     200, 
-                                    { user : userWithRefreshToken},
+                                    { user : userWithRefreshToken, accessToken, refreshToken },
                                     "User logged in successfully"
                                 )
                         );
@@ -71,24 +72,17 @@ export const login = asyncHandler(async (req, res, next) => {
 
     }else if(body.type === AUTH_ROLE.SDK){
       const partnerUser : partnerUserInfoInTokenType = req?.partnerUser!;
-      console.log(partnerUser);
-      
-      const { api_key, access_token_secret, name, tenant_id } = req?.partner;
-      console.log(tenant_id);
-      
+      const partner = req.partner;
+      if (!partner) throw new ApiError(400, "Partner context missing");
 
-      const user = await userModel.findOne({
-        phone_number :  partnerUser.phone_number!,
-        
-      })
-    //   console.log(user);
-      
-      if(!user) throw new ApiError(401, "invalid request, user doesnot exist");
+      const { tenant_id } = partner;
+
+      const user = await findOrCreateTenantUser(partnerUser, tenant_id);
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
-    const finalUser = await userModel.findByIdAndUpdate(user._id, {refresh_token : refreshToken}, {new : true}).select("--hashed_password").lean();
+    const finalUser = await userModel.findByIdAndUpdate(user._id, {refresh_token : refreshToken}, {new : true}).select("-hashed_password -refresh_token").lean();
     
     
         return res.status(200)
@@ -101,7 +95,9 @@ export const login = asyncHandler(async (req, res, next) => {
                     user : {
                         ...finalUser,
                         phone_number : finalUser?.phone_number.toString()
-                    }
+                    },
+                    accessToken,
+                    refreshToken
                 }, 
                 "user logged in successfully!"
             )
@@ -111,9 +107,57 @@ export const login = asyncHandler(async (req, res, next) => {
 })
 
 
-export const logout = asyncHandler(async(req, res, next) => {
+export const logout = asyncHandler(async (req, res) => {
+  const refreshToken =
+    req.cookies?.chatappRefreshToken || req.body?.refreshToken;
 
-})
+  if (refreshToken) {
+    try {
+      const jwt = await import("jsonwebtoken");
+      const decoded = jwt.default.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET!
+      ) as { _id: string };
+      await userModel.findByIdAndUpdate(decoded._id, { refresh_token: null });
+    } catch {
+      // token already invalid — still clear cookies
+    }
+  }
+
+  return res
+    .clearCookie("chatappAccessToken", cookieOptions)
+    .clearCookie("chatappRefreshToken", cookieOptions)
+    .json(new ApiResponse(200, {}, "Logged out successfully"));
+});
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const refreshToken =
+    req.cookies?.chatappRefreshToken || req.body?.refreshToken;
+
+  if (!refreshToken) throw new ApiError(401, "Refresh token required");
+
+  const jwt = await import("jsonwebtoken");
+  let decoded: { _id: string };
+  try {
+    decoded = jwt.default.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET!
+    ) as { _id: string };
+  } catch {
+    throw new ApiError(401, "Invalid or expired refresh token");
+  }
+
+  const user = await userModel.findById(decoded._id);
+  if (!user || user.refresh_token !== refreshToken) {
+    throw new ApiError(401, "Session expired");
+  }
+
+  const accessToken = user.generateAccessToken();
+
+  return res
+    .cookie("chatappAccessToken", accessToken, cookieOptions)
+    .json(new ApiResponse(200, { accessToken }, "Token refreshed"));
+});
 
 
 export const preRegister = asyncHandler(async(req, res, next) => {
@@ -134,8 +178,6 @@ export const preRegister = asyncHandler(async(req, res, next) => {
         if(isUser && isUser.tenant_id === null){
             throw new ApiError(401, "user already exists");
         }
-        console.log("After throwing erro");
-        
 
         return res.status(200)
                 .json(new ApiResponse(200, {
@@ -191,9 +233,18 @@ export const register = asyncHandler(async(req, res, next) => {
          throw new ApiError(500,error?.message);
     }
          
-    }else if(body.type === AUTH_ROLE.SDK){
-        throw new ApiError(400, "Cannot register SDK User currently...", [`SDK user registration request`]);
-        
+    } else if (body.type === AUTH_ROLE.SDK || req.partner) {
+        const partnerUser = req.partnerUser;
+        const partner = req.partner;
+        if (!partnerUser || !partner) {
+          throw new ApiError(400, "SDK registration requires partner context");
+        }
+
+        const user = await findOrCreateTenantUser(partnerUser, partner.tenant_id);
+
+        return res.status(200).json(
+          new ApiResponse(200, { user }, "SDK user provisioned successfully")
+        );
     }
 
     

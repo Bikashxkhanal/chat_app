@@ -16,7 +16,10 @@ export const ssoVerifyJWT = asyncHandler(async(req, _, next) => {
         const origin = req?.headers?.origin;
         if(!origin) throw new ApiError(400, "invalid request, origin missing");
     
-        const { access_token_secret } = req?.partner; 
+        const partner = req.partner;
+        if (!partner) throw new ApiError(400, "Partner context missing");
+
+        const { access_token_secret } = partner;
         const decodedToken = jwt.verify(token , access_token_secret) as ssoPayload  ;
     
         // to verify the token we need to know the secret key of accesstoken of the external application and must identify the accurate token that matches to the exact external application

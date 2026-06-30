@@ -29,7 +29,7 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
         if(!decodedInfo) throw new ApiError(401, "session expired"); //must invoke refresh endpoint to regenerate the access token 
 
         // get the user info by extracting the _id from decodedInfo
-        const user = await userModel.findById(decodedInfo._id).select("-hashed_password -refreshToken");
+        const user = await userModel.findById(decodedInfo._id).select("-hashed_password -refresh_token");
         // console.log(user);
         
 
