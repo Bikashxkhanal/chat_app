@@ -11,7 +11,10 @@ namespace Express {
 
             partner? : partner, 
 
-            partnerUser? : partnerUserInfoInTokenType
+            partnerUser? : partnerUserInfoInTokenType,
+
+            // Must add type for files so the req.files doesnot give type safety error
+            
 
         }
 

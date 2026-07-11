@@ -86,6 +86,7 @@ export const Input: React.FC<InputProps> = ({
             rounded-lg
             outline-none
             transition-all
+            text-black
             ${variantClasses[variant]}
             ${sizeClasses[inputSize]}
             ${stateClass}

@@ -7,9 +7,9 @@ import { initializeSocketInstance } from "./websocket";
 import dotenv from "dotenv";
 import path from "node:path";
 
-dotenv.config({
-  path: path.resolve(__dirname, "./../../../.env"),
-});
+// dotenv.config({
+//   path: path.resolve(__dirname, "./../../../.env"),
+// });
 
 const app = express();
 const httpServer = createServer(app);
@@ -28,6 +28,7 @@ initializeSocketInstance(io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.static('public'))
 
 app.use(
   cors({
@@ -59,4 +60,4 @@ app.use((err: ApiError, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-export { httpServer };
+export { httpServer, app };

@@ -7,6 +7,7 @@ import { getMyProfile, updateMyProfile } from "../services/profile.service";
 import { useAuth } from "../context/authContext";
 import { LocalStorage } from "../utils";
 import { Avatar } from "../components/common/avatar";
+import type { IUserDocument } from "@repo/types";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function SettingsPage() {
       const updated = await updateMyProfile({
         full_name: fullName,
         email: email || undefined,
-      });
+      }) as Partial<IUserDocument>
       updateUser(updated);
       LocalStorage.set("user", updated);
       setSuccess("Saved");

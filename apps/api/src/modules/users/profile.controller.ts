@@ -1,7 +1,8 @@
 import { ApiError, ApiResponse } from "@repo/utils";
-import { asyncHandler } from "../../utils";
+import { asyncHandler , uploadOnCloudinary} from "../../utils";
 import { userModel } from "@repo/db-nosql";
 import type { UpdateProfileBody } from "@repo/types";
+
 
 export const getMyProfile = asyncHandler(async (req, res) => {
   const user = req.user;
@@ -49,3 +50,24 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
 
   return res.json(new ApiResponse(200, updated, "Profile updated successfully"));
 });
+
+
+export const uploadProfileAvatar = asyncHandler(async (req, res) => {
+      try {
+        console.log(typeof process.env.CLOUDINARY_API_KEY);
+        
+            const files = req.files  as any
+            console.log(files.profilePicture[0] );
+           const status = await uploadOnCloudinary(files.profilePicture[0].path)
+           console.log(status);
+           
+
+         return res.status(200).json(
+            new ApiResponse(200, {} ,"Profile uploaded successfully!")
+          )
+
+
+      } catch (error : any) {
+        throw new ApiError(500, error.message)
+      }
+})

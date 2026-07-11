@@ -6,7 +6,8 @@ dotenv.config({
 });
 
 import { connectMongoDB } from "@repo/db-nosql";
-import { httpServer } from "./app";
+import { httpServer , app} from "./app";
+
 
 const port = process.env.API_PORT ?? "8000";
 
