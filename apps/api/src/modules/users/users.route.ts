@@ -12,12 +12,7 @@ userRouter.route("/me").patch(verifyJWT, standaloneOnly, updateMyProfile);
 userRouter.route("/conv-message/:conversationedUserId").get(verifyJWT, getConversationMessages);
 userRouter.route("/getAllConversationUsers").get(verifyJWT, getAssociatedUsersDetails);
 userRouter.route("/search").get(verifyJWT, searchUsers);
-userRouter.route("/upload-profile").post(verifyJWT, upload.fields([
-    {
-        name : "profilePicture",
-        maxCount : 1
-    }
-]), uploadProfileAvatar)
+userRouter.route("/upload-profile").post(verifyJWT, upload.fields([{name : "profilePicture",maxCount : 1}]), uploadProfileAvatar)
 
 export {
     userRouter

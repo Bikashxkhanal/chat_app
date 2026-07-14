@@ -1,6 +1,6 @@
 import "express"
 import { UserDocument, partner } from "@repo/types";
-import { partnerUserInfoInTokenType } from "@repo/types";
+import { partnerUserInfoInTokenType, files } from "@repo/types";
 
 
 // declaration of interface request to add user and partner in the reqest of express 
@@ -14,7 +14,7 @@ namespace Express {
             partnerUser? : partnerUserInfoInTokenType,
 
             // Must add type for files so the req.files doesnot give type safety error
-            
+            files? : files
 
         }
 

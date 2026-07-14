@@ -4,8 +4,7 @@ import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 import { initializeSocketInstance } from "./websocket";
-import dotenv from "dotenv";
-import path from "node:path";
+
 
 // dotenv.config({
 //   path: path.resolve(__dirname, "./../../../.env"),
@@ -36,6 +35,9 @@ app.use(
     credentials: true,
   })
 );
+
+// cloudinary api key and other setup
+// configureCloudinary()
 
 import { authRouter } from "./modules/auth/auth.route";
 import { ApiError } from "@repo/utils";

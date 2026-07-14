@@ -1,12 +1,6 @@
-import dotenv from "dotenv";
-import path from "node:path";
-
-dotenv.config({
-  path: path.resolve(__dirname, "./../../../.env"),
-});
 
 import { connectMongoDB } from "@repo/db-nosql";
-import { httpServer , app} from "./app";
+import { httpServer} from "./app";
 
 
 const port = process.env.API_PORT ?? "8000";

@@ -46,8 +46,9 @@ export type TENANT_USER_ROLE =
 export const MEDIA_FILE_TYPE = {
     IMAGE: "IMAGE",
     VIDEO: "VIDEO",
-    AUDIO: "AUDIO",
-    FILE: "FILE"
+    RAW : "RAW", 
+    AUTO : "AUTO"
+    
 } as const;
 
 export type MEDIA_FILE_TYPE =

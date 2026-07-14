@@ -5,9 +5,11 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit" : true,
+    "allowImportingTsExtensions" : true,
   },
-  "include": ["src"]
+  "include": ["src", "src/bootstrap.ts"]
 }

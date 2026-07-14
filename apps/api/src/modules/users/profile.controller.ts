@@ -1,7 +1,7 @@
 import { ApiError, ApiResponse } from "@repo/utils";
 import { asyncHandler , uploadOnCloudinary} from "../../utils";
-import { userModel } from "@repo/db-nosql";
-import type { UpdateProfileBody } from "@repo/types";
+import { userModel , MediaModel} from "@repo/db-nosql";
+import type { files, UpdateProfileBody, uploadProfilePicture } from "@repo/types";
 
 
 export const getMyProfile = asyncHandler(async (req, res) => {
@@ -52,18 +52,28 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
 });
 
 
+// upload profile picture for each user, 
 export const uploadProfileAvatar = asyncHandler(async (req, res) => {
       try {
-        console.log(typeof process.env.CLOUDINARY_API_KEY);
-        
-            const files = req.files  as any
-            console.log(files.profilePicture[0] );
-           const status = await uploadOnCloudinary(files.profilePicture[0].path)
-           console.log(status);
-           
+        // console.log( process.env.CLOUDINARY_API_KEY);
+        if(!req.files) throw new ApiError(401, "profile picture is missing")
+        const files = req.files as uploadProfilePicture
+ 
+        const upload = await uploadOnCloudinary(files.profilePicture[0].path)
+        console.log(upload);
 
+        if(upload?.resource_type != 'image') throw new ApiError(402, "Profile picture can only be image");
+
+        const updated = await userModel.findOneAndUpdate( req.user?._id, {
+          avatar : upload.secure_url
+        },{ new : true})
+
+        if(!updated) throw new ApiError(402, "Unauthorized Access, User not found")
+
+        // console.log(uploadMediaDetails);
+        
          return res.status(200).json(
-            new ApiResponse(200, {} ,"Profile uploaded successfully!")
+            new ApiResponse(200 , {} ,"Profile uploaded successfully!")
           )
 
 
