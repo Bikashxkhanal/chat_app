@@ -2,9 +2,6 @@ import type {
   ApiSuccessResponseInterface,
   ConversationListItem,
   MessageReceivedPayload,
-  MessageStatusPayload,
-  TypingPayload,
-  PresencePayload,
 } from "@repo/types";
 import { apiClient } from "./api";
 

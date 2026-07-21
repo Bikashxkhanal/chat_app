@@ -1,7 +1,7 @@
 import { ApiError, ApiResponse } from "@repo/utils";
 import { asyncHandler , uploadOnCloudinary} from "../../utils";
-import { userModel , MediaModel} from "@repo/db-nosql";
-import type { files, UpdateProfileBody, uploadProfilePicture } from "@repo/types";
+import { userModel } from "@repo/db-nosql";
+import type { UpdateProfileBody, uploadProfilePicture } from "@repo/types";
 
 
 export const getMyProfile = asyncHandler(async (req, res) => {
@@ -54,32 +54,25 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
 
 // upload profile picture for each user, 
 export const uploadProfileAvatar = asyncHandler(async (req, res) => {
-      try {
-        // console.log( process.env.CLOUDINARY_API_KEY);
-        if(!req.files) throw new ApiError(401, "profile picture is missing")
-        const files = req.files as uploadProfilePicture
- 
-        const upload = await uploadOnCloudinary(files.profilePicture[0].path)
-        console.log(upload);
+        if (!req.user) throw new ApiError(401, "Unauthorized");
+        const files = req.files as uploadProfilePicture | undefined;
+        const profilePicture = files?.profilePicture?.[0];
+        if (!profilePicture?.path) throw new ApiError(400, "Profile picture is required");
 
-        if(upload?.resource_type != 'image') throw new ApiError(402, "Profile picture can only be image");
+        const upload = await uploadOnCloudinary(profilePicture.path);
+        if (!upload || upload.resource_type !== "image") {
+          throw new ApiError(400, "Profile picture can only be an image");
+        }
 
-        const updated = await userModel.findOneAndUpdate( req.user?._id, {
+        const updated = await userModel.findByIdAndUpdate(req.user._id, {
           avatar : upload.secure_url
-        },{ new : true})
+        }, { new: true }).select("full_name email avatar phone_number type createdAt updatedAt");
 
-        if(!updated) throw new ApiError(402, "Unauthorized Access, User not found")
-
-        const profile = await userModel
-          .findById(updated._id)
-          .select("full_name email avatar phone_number type createdAt updatedAt");
+        if(!updated) throw new ApiError(404, "User not found");
         
          return res.status(200).json(
-            new ApiResponse(200 , profile ,"Profile uploaded successfully!")
+            new ApiResponse(200 , updated ,"Profile uploaded successfully!")
           )
 
 
-      } catch (error : any) {
-        throw new ApiError(500, error.message)
-      }
 })

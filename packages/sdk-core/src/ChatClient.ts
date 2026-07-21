@@ -7,7 +7,6 @@ import {
   type ConversationListItem,
   type MessageReceivedPayload,
   type SendMessagePayload,
-  type MessageStatusPayload,
 } from "@repo/types";
 
 export interface ChatSDKConfig {
@@ -27,8 +26,10 @@ export class ChatSDK {
   private socket: Socket | null = null;
   private accessToken: string | null = null;
   private listeners = new Map<string, Set<EventCallback>>();
+  private config: ChatSDKConfig;
 
-  constructor(private config: ChatSDKConfig) {
+  constructor(config: ChatSDKConfig) {
+    this.config = config;
     this.api = axios.create({
       baseURL: config.apiBaseUrl,
       withCredentials: true,

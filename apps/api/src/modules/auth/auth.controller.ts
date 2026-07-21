@@ -291,34 +291,27 @@ export const register = asyncHandler(async(req, res, next) => {
     if(body.password !== body.confirm_password) throw new ApiError(401, "confirm password didnot matched");
 
 
-    try {
+    const isUser = await userModel.findOne({phone_number : phone});
 
-        const isUser = await userModel.findOne({phone_number : phone});
+    if(isUser && !isUser.tenant_id){
+        throw new ApiError(400, "User with this phone number already exists");
+    }
 
-        if(isUser && !isUser.tenant_id){
-            throw new ApiError(400, "user already exists");
-        }
+    const user = await userModel.create({
+       phone_number : phone ,
+       hashed_password : body.password
 
+    });
 
-        const user = await userModel.create({
-           phone_number : phone ,
-           hashed_password : body.password
-    
-        });
+    await clearPhoneVerification(phone);
 
-        await clearPhoneVerification(phone);
-
-        return res.status(200).json(
+    return res.status(201).json(
         new ApiResponse(
-            200, 
+            201,
             user,
             "user created successfully"
         )
     );
-    
-    } catch (error : any) {
-         throw new ApiError(500,error?.message);
-    }
          
     } else if (body.type === AUTH_ROLE.SDK || req.partner) {
         const partnerUser = req.partnerUser;
