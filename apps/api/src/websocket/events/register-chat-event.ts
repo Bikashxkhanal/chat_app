@@ -178,23 +178,6 @@ export const mountSendMessageEvent = (socket: any, io: any) => {
 
         socket.emit(chatEventEnums.MESSAGE_SENT_EVENT, senderPayload);
 
-        const deliveredAt = new Date().toISOString();
-        const notifyDelivered = (targetUserId: string) => {
-          if (!presenceStore.isOnline(targetUserId)) return;
-          const deliveredPayload = {
-            messageId: messagePayload._id,
-            conversationId,
-            status: MESSAGE_STATUS.DELIVERED,
-            delivered_at: deliveredAt,
-            clientMessageId,
-          };
-          io.to(socket.user._id.toString()).emit(
-            chatEventEnums.MESSAGE_DELIVERED_EVENT,
-            deliveredPayload
-          );
-          io.to(targetUserId).emit(chatEventEnums.MESSAGE_DELIVERED_EVENT, deliveredPayload);
-        };
-
         if (isGroupChat) {
           const participants = (conversation.participants ?? []) as unknown as mongoose.Types.ObjectId[];
           for (const participant of participants) {
@@ -206,12 +189,9 @@ export const mountSendMessageEvent = (socket: any, io: any) => {
               conversationId,
               lastMessage: messagePayload,
             });
-            notifyDelivered(participantId);
           }
         } else {
-          socket.to(conversationId).emit(chatEventEnums.MESSAGE_RECEIVED_EVENT, messagePayload);
           io.to(recipientId!).emit(chatEventEnums.MESSAGE_RECEIVED_EVENT, messagePayload);
-          notifyDelivered(recipientId!);
           io.to(recipientId!).emit(chatEventEnums.NEW_CHAT_EVENT, {
             conversationId,
             lastMessage: messagePayload,
@@ -245,17 +225,23 @@ export const mountMessageAckEvent = (socket: any, io: any) => {
       );
       if (!conversation) return;
 
-      await markMessagesDelivered([messageId], socket.user._id.toString());
+      const deliveredMessages = await markMessagesDelivered(
+        [messageId],
+        socket.user._id.toString()
+      );
 
-      const deliveredAt = new Date().toISOString();
-      const statusPayload = {
-        messageId,
-        conversationId,
-        status: MESSAGE_STATUS.DELIVERED,
-        delivered_at: deliveredAt,
-      };
-
-      io.to(conversationId).emit(chatEventEnums.MESSAGE_DELIVERED_EVENT, statusPayload);
+      // Receipts target the sender's personal room, which remains joined even
+      // after they leave the conversation screen.
+      for (const message of deliveredMessages) {
+        if (message.status !== MESSAGE_STATUS.DELIVERED) continue;
+        io.to(message.author.toString()).emit(chatEventEnums.MESSAGE_DELIVERED_EVENT, {
+          messageId: message._id.toString(),
+          conversationId,
+          status: MESSAGE_STATUS.DELIVERED,
+          delivered_at: message.delivered_at?.toISOString() ?? null,
+          clientMessageId: message.clientMessageId ?? undefined,
+        });
+      }
     }
   );
 };

@@ -23,7 +23,8 @@ export async function uploadProfileAvatar(
     "/users/upload-profile",
     formData,
     {
-      headers: { "Content-Type": "multipart/form-data" },
+      // Do not set Content-Type here. The browser adds the multipart boundary
+      // when it serializes FormData; a manually supplied value can omit it.
       onUploadProgress: (event) => {
         if (event.total && onProgress) {
           onProgress(Math.round((event.loaded * 100) / event.total));

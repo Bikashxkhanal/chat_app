@@ -45,6 +45,14 @@ apiClient.interceptors.response.use(
         window.location.href = "/login";
       }
     }
+
+    // Axios otherwise exposes only e.g. "Request failed with status code 502",
+    // hiding the API's actionable upload error from the settings page.
+    const apiMessage = error.response?.data?.message;
+    if (typeof apiMessage === "string" && apiMessage.trim()) {
+      error.message = apiMessage;
+    }
+
     return Promise.reject(error);
   }
 );

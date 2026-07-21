@@ -251,6 +251,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     const onMessageSent = (payload: unknown) => {
       upsertMessage({ ...(payload as MessageReceivedPayload), status: MESSAGE_STATUS.SENT });
+      // The sender does not receive MESSAGE_RECEIVED_EVENT, so refresh its
+      // conversation card explicitly (preview, timestamp, and sort order).
+      scheduleRefreshConversations();
     };
 
     const onMessageReceived = (payload: unknown) => {
