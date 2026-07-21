@@ -72,7 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = (updated: Partial<IUserDocument> & Record<string, unknown>) => {
-    setUser((prev) => ({ ...(prev ?? {}), ...updated }) as IUserDocument);
+    setUser((prev) => {
+      const merged = { ...(prev ?? {}), ...updated } as IUserDocument;
+      LocalStorage.set("user", merged);
+      return merged;
+    });
   };
 
   return (

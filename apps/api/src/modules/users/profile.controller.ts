@@ -70,10 +70,12 @@ export const uploadProfileAvatar = asyncHandler(async (req, res) => {
 
         if(!updated) throw new ApiError(402, "Unauthorized Access, User not found")
 
-        // console.log(uploadMediaDetails);
+        const profile = await userModel
+          .findById(updated._id)
+          .select("full_name email avatar phone_number type createdAt updatedAt");
         
          return res.status(200).json(
-            new ApiResponse(200 , {} ,"Profile uploaded successfully!")
+            new ApiResponse(200 , profile ,"Profile uploaded successfully!")
           )
 
 

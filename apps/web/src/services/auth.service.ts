@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { localLoginBody, localRegisterBody, preLocalRegisterBody } from "@repo/types";
+import type { localLoginBody, localRegisterBody, preLocalRegisterBody, verifyOtpBody, resendOtpBody } from "@repo/types";
 import type { ApiResponse, User, LoginResponse } from "../types/auth.types";
 import { apiClient } from "./api";
 
@@ -30,8 +30,20 @@ export const logout = async () => {
 
 export const preRegister = async (
   preSignupData: preLocalRegisterBody
-): Promise<ApiResponse<{ isUser: boolean; otpVerified: boolean }>> => {
+): Promise<ApiResponse<{ isUser: boolean; otpSent: boolean; resendCooldownSeconds: number }>> => {
   return postFn("/auth/preregister", preSignupData);
+};
+
+export const verifyOtp = async (
+  data: verifyOtpBody
+): Promise<ApiResponse<{ otpVerified: boolean; phone_number: string }>> => {
+  return postFn("/auth/verify-otp", data);
+};
+
+export const resendOtp = async (
+  data: resendOtpBody
+): Promise<ApiResponse<{ otpSent: boolean; resendCooldownSeconds: number }>> => {
+  return postFn("/auth/resend-otp", data);
 };
 
 export const register = async (

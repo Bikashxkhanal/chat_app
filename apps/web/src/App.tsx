@@ -10,6 +10,7 @@ import {
 import "./App.css";
 import Login from "./components/auth/login";
 import PreSignup from "./components/auth/presignup";
+import VerifyOtp from "./components/auth/verify-otp";
 import Signup from "./components/auth/signup";
 import type { PreSignupState } from "./types/auth.types";
 import DashboardPage from "./page/dashboard";
@@ -57,9 +58,33 @@ function PreSignupRoute(): JSX.Element {
   return (
     <PreSignup
       onVerified={(state: PreSignupState) => {
-        navigate("/signup/create-password", { state });
+        navigate("/signup/verify-otp", { state });
       }}
       onLoginClick={() => navigate("/login")}
+    />
+  );
+}
+
+function VerifyOtpRoute(): JSX.Element {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const state = location.state as PreSignupState | null;
+
+  if (!state?.phone_number) {
+    return <Navigate to="/signup" replace />;
+  }
+
+  if (state.otpVerified) {
+    return <Navigate to="/signup/create-password" replace state={state} />;
+  }
+
+  return (
+    <VerifyOtp
+      preSignupState={state}
+      onVerified={(verifiedState) => {
+        navigate("/signup/create-password", { state: verifiedState });
+      }}
+      onBack={() => navigate("/signup")}
     />
   );
 }
@@ -69,8 +94,12 @@ function SignupRoute(): JSX.Element {
   const navigate = useNavigate();
   const state = location.state as PreSignupState | null;
 
-  if (!state) {
+  if (!state?.phone_number) {
     return <Navigate to="/signup" replace />;
+  }
+
+  if (!state.otpVerified) {
+    return <Navigate to="/signup/verify-otp" replace state={state} />;
   }
 
   return (
@@ -93,6 +122,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <PreSignupRoute />,
+          },
+          {
+            path: "verify-otp",
+            element: <VerifyOtpRoute />,
           },
           {
             path: "create-password",

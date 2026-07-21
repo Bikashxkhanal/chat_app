@@ -51,7 +51,6 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
         type : AUTH_ROLE.NORMAL, 
         phone_number : fullNumber
       });
-      // Backend confirmed phone is free — move to Step 2
       onVerified({ phone_number: fullNumber });
     } catch (error: any) {
       setError((error instanceof Error) ? error.message : "something went wrong")
@@ -103,12 +102,12 @@ export default function PreSignup({ onVerified, onLoginClick }: PreSignupProps) 
               >
                 Step 1: Phone
               </span>
-              <span className="text-sm text-gray-400">50% complete</span>
+              <span className="text-sm text-gray-400">33% complete</span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-gray-200">
               <div
                 className="h-1.5 rounded-full"
-                style={{ width: "50%", background: "#3730d4" }}
+                style={{ width: "33%", background: "#3730d4" }}
               />
             </div>
           </div>

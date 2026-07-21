@@ -1,5 +1,5 @@
-// ─── Signup (Step 2 of 2) ─────────────────────────────────────────────────────
-// User creates their password after phone number was verified in PreSignup.
+// ─── Signup (Step 3 of 3) ─────────────────────────────────────────────────────
+// User creates their password after phone number was verified via OTP.
 
 import { useState } from "react";
 import { Input } from "../common/input";
@@ -114,7 +114,7 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
         <span className="text-lg font-bold" style={{ color: "#3730d4" }}>
           ChatPulse
         </span>
-        <span className="text-sm text-gray-400 font-medium">Step 2 of 2</span>
+        <span className="text-sm text-gray-400 font-medium">Step 3 of 3</span>
       </header>
 
       {/* ── Body ─────────────────────────────────────────────────────────── */}
@@ -122,7 +122,7 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
         <div className="w-full max-w-md bg-white rounded-2xl shadow-md px-8 py-10">
 
           {/* Step indicator */}
-          <div className="flex items-center justify-center gap-3 mb-7">
+          <div className="flex items-center justify-center gap-2 mb-7">
             {/* Step 1 — completed */}
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center"
@@ -137,18 +137,30 @@ export default function Signup({ preSignupState, onSuccess }: SignupProps) {
               </svg>
             </div>
 
-            {/* Connector line */}
-            <div
-              className="h-0.5 w-10 rounded-full"
-              style={{ background: "#3730d4" }}
-            />
+            <div className="h-0.5 w-6 rounded-full" style={{ background: "#3730d4" }} />
 
-            {/* Step 2 — current */}
+            {/* Step 2 — completed */}
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: "#3730d4" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 13l4 4L19 7"
+                  stroke="#fff" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <div className="h-0.5 w-6 rounded-full" style={{ background: "#3730d4" }} />
+
+            {/* Step 3 — current */}
             <div
               className="w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm"
               style={{ borderColor: "#3730d4", color: "#3730d4" }}
             >
-              2
+              3
             </div>
           </div>
 

@@ -26,6 +26,17 @@ export interface localRegisterBody {
     confirm_password : string;
 }
 
+export interface verifyOtpBody {
+    type :typeof AUTH_ROLE.NORMAL;
+    phone_number : string;
+    otp : string;
+}
+
+export interface resendOtpBody {
+    type :typeof AUTH_ROLE.NORMAL;
+    phone_number : string;
+}
+
 // will update when needed 
 export interface sdkRegisterBody {
     type :typeof AUTH_ROLE.SDK

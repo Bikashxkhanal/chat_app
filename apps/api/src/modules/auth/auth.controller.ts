@@ -1,9 +1,11 @@
 import { ApiError, ApiResponse } from "@repo/utils";
 import { asyncHandler } from "../../utils";
-import { loginBody , AUTH_ROLE, registerBody, preLocalRegisterBody, partnerUserInfoInTokenType} from "@repo/types";
+import { loginBody , AUTH_ROLE, registerBody, preLocalRegisterBody, partnerUserInfoInTokenType, verifyOtpBody, resendOtpBody} from "@repo/types";
 import { userModel } from "@repo/db-nosql";
 import { cookieOptions } from "../../constants/index";
 import { findOrCreateTenantUser } from "../../services/tenant-user.service";
+import { sendOtpToPhone, verifyOtp, isPhoneVerified, clearPhoneVerification, RESEND_COOLDOWN_SECONDS } from "../../services/otp.service";
+import { validatePhoneNumber, normalizePhoneNumber } from "../../utils/phone.validation";
 
 
 export const login = asyncHandler(async (req, res, next) => {
@@ -168,25 +170,93 @@ export const preRegister = asyncHandler(async(req, res, next) => {
     }
 
     if(!body.phone_number){
-        throw new ApiError(401, "phone number is required");
+        throw new ApiError(400, "Phone number is required");
     }
 
-    try {
-        const isUser = await userModel.findOne({phone_number : body.phone_number});
-        // console.log(isUser);
-        
-        if(isUser && isUser.tenant_id === null){
-            throw new ApiError(401, "user already exists");
-        }
+    const phone = normalizePhoneNumber(body.phone_number);
 
-        return res.status(200)
-                .json(new ApiResponse(200, {
-                        isUser : false,
-                        otpVerified : false
-                    }, "pre-registration successfull..."));
-                } catch (error : any) {
-                    throw new ApiError(401, error.message);
-                }
+    if(!validatePhoneNumber(phone)){
+        throw new ApiError(400, "Invalid phone number format. Use international format e.g. +9779812345678");
+    }
+
+    const isUser = await userModel.findOne({phone_number : phone});
+        
+    if(isUser && isUser.tenant_id === null){
+        throw new ApiError(400, "User with this phone number already exists");
+    }
+
+    await sendOtpToPhone(phone);
+
+    return res.status(200)
+            .json(new ApiResponse(200, {
+                    isUser : false,
+                    otpSent : true,
+                    resendCooldownSeconds : RESEND_COOLDOWN_SECONDS
+                }, "Verification code sent successfully"));
+})
+
+
+export const verifyOtpHandler = asyncHandler(async(req, res) => {
+    const body : verifyOtpBody = req?.body;
+
+    if(body.type !== AUTH_ROLE.NORMAL){
+        throw new ApiError(401, "Invalid registration type");
+    }
+
+    if(!body.phone_number){
+        throw new ApiError(400, "Phone number is required");
+    }
+
+    if(!body.otp){
+        throw new ApiError(400, "OTP is required");
+    }
+
+    const phone = normalizePhoneNumber(body.phone_number);
+
+    if(!validatePhoneNumber(phone)){
+        throw new ApiError(400, "Invalid phone number format");
+    }
+
+    await verifyOtp(phone, body.otp);
+
+    return res.status(200)
+            .json(new ApiResponse(200, {
+                    otpVerified : true,
+                    phone_number : phone
+                }, "Phone number verified successfully"));
+})
+
+
+export const resendOtpHandler = asyncHandler(async(req, res) => {
+    const body : resendOtpBody = req?.body;
+
+    if(body.type !== AUTH_ROLE.NORMAL){
+        throw new ApiError(401, "Invalid registration type");
+    }
+
+    if(!body.phone_number){
+        throw new ApiError(400, "Phone number is required");
+    }
+
+    const phone = normalizePhoneNumber(body.phone_number);
+
+    if(!validatePhoneNumber(phone)){
+        throw new ApiError(400, "Invalid phone number format");
+    }
+
+    const isUser = await userModel.findOne({phone_number : phone});
+        
+    if(isUser && isUser.tenant_id === null){
+        throw new ApiError(400, "User with this phone number already exists");
+    }
+
+    await sendOtpToPhone(phone);
+
+    return res.status(200)
+            .json(new ApiResponse(200, {
+                    otpSent : true,
+                    resendCooldownSeconds : RESEND_COOLDOWN_SECONDS
+                }, "Verification code resent successfully"));
 })
 
 
@@ -203,12 +273,27 @@ export const register = asyncHandler(async(req, res, next) => {
     if(body.type === AUTH_ROLE.NORMAL){
         // stpes for registrating normal user
 
+    if(!body.phone_number){
+        throw new ApiError(400, "Phone number is required");
+    }
+
+    const phone = normalizePhoneNumber(body.phone_number);
+
+    if(!validatePhoneNumber(phone)){
+        throw new ApiError(400, "Invalid phone number format");
+    }
+
+    const verified = await isPhoneVerified(phone);
+    if(!verified){
+        throw new ApiError(400, "Phone number must be verified before registration");
+    }
+
     if(body.password !== body.confirm_password) throw new ApiError(401, "confirm password didnot matched");
 
 
     try {
 
-        const isUser = await userModel.findOne({phone_number : body.phone_number});
+        const isUser = await userModel.findOne({phone_number : phone});
 
         if(isUser && !isUser.tenant_id){
             throw new ApiError(400, "user already exists");
@@ -216,10 +301,12 @@ export const register = asyncHandler(async(req, res, next) => {
 
 
         const user = await userModel.create({
-           phone_number : body.phone_number ,
+           phone_number : phone ,
            hashed_password : body.password
     
         });
+
+        await clearPhoneVerification(phone);
 
         return res.status(200).json(
         new ApiResponse(
@@ -249,5 +336,4 @@ export const register = asyncHandler(async(req, res, next) => {
 
     
 })
-
 

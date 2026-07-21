@@ -22,6 +22,17 @@ export interface LoginBody {
   password: string;
 }
 
+export interface VerifyOtpBody {
+  type: AuthType;
+  phone_number: string;
+  otp: string;
+}
+
+export interface ResendOtpBody {
+  type: AuthType;
+  phone_number: string;
+}
+
 // ─── API Response Shape ───────────────────────────────────────────────────────
 
 export interface ApiResponse<T = unknown> {
@@ -50,9 +61,12 @@ export interface LoginResponse {
   refreshToken: string;
 }
 
-// ─── Navigation State shared between PreSignup → Signup ───────────────────────
+// ─── Navigation State shared between PreSignup → VerifyOtp → Signup ───────────
 
 export interface PreSignupState {
   phone_number: string;
-  // extend here when OTP is wired up
+  otpVerified?: boolean;
 }
+
+export const OTP_LENGTH = 6;
+export const RESEND_COOLDOWN_SECONDS = 60;
