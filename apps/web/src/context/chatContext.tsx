@@ -132,6 +132,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const typingClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingActiveRef = useRef(false);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasLoadedConversationsRef = useRef(false);
   const onlineUsersRef = useRef<Set<string>>(new Set());
   const currentUserIdRef = useRef("");
 
@@ -154,7 +155,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshConversations = useCallback(async () => {
-    setIsLoadingConversations(true);
+    // Keep existing cards visible during socket-driven refreshes. The loading
+    // state is reserved for the initial fetch so the sidebar does not flash.
+    const isInitialLoad = !hasLoadedConversationsRef.current;
+    if (isInitialLoad) setIsLoadingConversations(true);
     try {
       const data = await getSdk().getConversations();
       setConversations(
@@ -162,8 +166,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           mapConversationToCard(c, currentUserIdRef.current, onlineUsersRef.current)
         )
       );
+      hasLoadedConversationsRef.current = true;
     } finally {
-      setIsLoadingConversations(false);
+      if (isInitialLoad) setIsLoadingConversations(false);
     }
   }, [getSdk]);
 
@@ -262,14 +267,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // Sender already has this via messageSent + optimistic UI
       if (normalizeId(msg.author) === currentUserIdRef.current) return;
 
-      // Always ack delivery so sender gets delivered status
-      sdk.ackMessage(msg._id, msg.conversation_Id);
-
       const active = selectedChatRef.current;
       const isActiveChat =
         active && normalizeId(msg.conversation_Id) === normalizeId(active.conversationId);
 
       if (isActiveChat) {
+        // A delivery receipt is only sent while the recipient has this chat
+        // open. Messages in inactive chats stay sent until they are opened.
+        sdk.ackMessage(msg._id, msg.conversation_Id);
         upsertMessage(msg);
         markSeen(active.conversationId);
       }
