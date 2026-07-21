@@ -1,5 +1,6 @@
-export * from './user.type'
+export {AUTH_ROLE} from './roles.type'
 export * from './roles.type'
+export * from './user.type'
 export * from './auth.type'
 export * from './partner.tokeninfo.type'
 export * from './tenant.type'
