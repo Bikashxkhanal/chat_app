@@ -1,0 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AvailableChatEvents = exports.chatEventEnums = void 0;
+exports.chatEventEnums = Object.freeze({
+    CONNECTED_EVENT: "connected",
+    DISCONNECT_EVENT: "disconnect",
+    RECONNECTING_EVENT: "reconnecting",
+    JOIN_CHAT_EVENT: "joinChat",
+    LEAVE_CHAT_EVENT: "leaveChat",
+    UPDATE_GROUP_NAME_EVENT: "updateGroupName",
+    CONVERSATION_CREATED_EVENT: "conversationCreated",
+    CONVERSATION_UPDATED_EVENT: "conversationUpdated",
+    MESSAGE_RECEIVED_EVENT: "messageReceived",
+    MESSAGE_SENT_EVENT: "messageSent",
+    MESSAGE_DELIVERED_EVENT: "messageDelivered",
+    MESSAGE_SEEN_EVENT: "messageSeen",
+    MESSAGE_ACK_EVENT: "messageAck",
+    MESSAGE_DELETE_EVENT: "messageDeleted",
+    MESSAGE_EDITED_EVENT: "messageEdited",
+    SEND_MESSAGE_EVENT: "sendMessage",
+    MARK_SEEN_EVENT: "markSeen",
+    NEW_CHAT_EVENT: "newChat",
+    SOCKET_ERROR_EVENT: "socketError",
+    STOP_TYPING_EVENT: "stopTyping",
+    TYPING_EVENT: "typing",
+    USER_ONLINE_EVENT: "userOnline",
+    USER_OFFLINE_EVENT: "userOffline",
+    TOKEN_EXPIRED_EVENT: "tokenExpired",
+});
+exports.AvailableChatEvents = Object.values(exports.chatEventEnums);
