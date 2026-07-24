@@ -32,7 +32,7 @@ export function UserCard({
       className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors hover:bg-[var(--surface-hover)]"
     >
       <div className="relative shrink-0">
-        <Avatar name={full_name} src={avatar} size={44} />
+        <Avatar name={full_name } src={avatar} size={44} />
         {isOnline && !isGroup && (
           <span
             className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--surface)]"

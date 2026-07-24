@@ -45,7 +45,7 @@ const getAssociatedUsersDetails = asyncHandler(async (req, res) => {
         from: "users",
         localField: "otherParticipant",
         foreignField: "_id",
-        pipeline: [{ $project: { full_name: 1, avatar: 1, last_active_at: 1 } }],
+        pipeline: [{ $project: { full_name: 1, avatar: 1, last_active_at: 1, phone_number: 1 } }],
         as: "userInfo",
       },
     },
@@ -143,6 +143,7 @@ const getAssociatedUsersDetails = asyncHandler(async (req, res) => {
               fullname: "$userInfo.full_name",
               avatar: "$userInfo.avatar",
               lastActiveAt: "$userInfo.last_active_at",
+              phone_number : "$userInfo.phone_number"
             },
           },
         },

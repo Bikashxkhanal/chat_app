@@ -3,7 +3,7 @@ export type MessageStatus = "received_unseen" | "received_seen" | "sent" | "deli
 
 export interface UserCardProps {
   avatar?: string | null;
-  full_name: string;
+  full_name: string ;
   lastMessage: string;
   messageStatus: MessageStatus;
   timestamp?: string;
@@ -13,5 +13,6 @@ export interface UserCardProps {
   isGroup?: boolean;
   unreadCount?: number;
   isOnline?: boolean;
+  
   onClick?: () => void;
 }

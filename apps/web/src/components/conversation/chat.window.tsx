@@ -13,6 +13,12 @@ function StatusTicks({ status }: { status?: string }) {
         ? "var(--fg-muted)"
         : "var(--fg-muted)";
 
+  if(status === MESSAGE_STATUS.SENT){
+    return (<svg width="14" height="9" viewBox="0 0 16 10" fill="none" className="inline ml-1">
+          <path d="M1 5L4.5 8.5L10.5 1.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          )
+  }
   if (status === MESSAGE_STATUS.SENDING) {
     return <span className="text-[10px] opacity-60">...</span>;
   }

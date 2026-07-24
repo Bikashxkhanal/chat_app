@@ -185,6 +185,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return normalizeId(conversationId) === normalizeId(active.conversationId);
   }, []);
 
+  // upserting the message temporarirly first and after the server response updating the temparirary message with the server response 
   const upsertMessage = useCallback((payload: MessageReceivedPayload) => {
     if (!belongsToActiveChat(payload.conversation_Id)) return;
 
@@ -228,6 +229,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     );
   }, [belongsToActiveChat]);
 
+  // marking user is online or not 
   const patchPresenceOnCard = useCallback((userId: string, isOnline: boolean) => {
     setConversations((prev) =>
       prev.map((c) => (c.userId === userId ? { ...c, isOnline } : c))
@@ -397,6 +399,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         )
       );
 
+      // assuming the conversation Id present in the chat before requesting to the server
       sdk.joinConversation(chat.conversationId);
 
       try {
@@ -406,6 +409,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const conversationId = conversation?._id ?? chat.conversationId;
 
         setSelectedChat((prev) => (prev ? { ...prev, conversationId } : prev));
+        // fallback assuming the coversation id might changes, 
         sdk.joinConversation(conversationId);
         setMessages(msgs ?? []);
         markSeen(conversationId);
